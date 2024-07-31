@@ -47,6 +47,7 @@
                         </tr>
                     </tbody>
                 </table>
+                <button class="btn btn-warning" onclick="resetPoints()">Reset bodů</button>
             </div>
         </div>
     </div>
@@ -114,12 +115,16 @@
                         <h4>${match}</h4>
                         <div class="mb-2">
                             <label>Karlos: </label>
-                            <input type="number" class="tip-input" id="karlos-tip-${roundIndex}-${matchIndex}" min="0" max="2">
-                            <label>Kuba: </label>
-                            <input type="number" class="tip-input" id="kuba-tip-${roundIndex}-${matchIndex}" min="0" max="2">
+                            <input type="number" class="tip-input" id="karlos-tip-${roundIndex}-${matchIndex}" min="0" max="2" onchange="saveTip('karlos', ${roundIndex}, ${matchIndex}, this.value)">
+                            <button class="btn btn-success btn-sm" onclick="evaluateTip('karlos', ${roundIndex}, ${matchIndex}, true)">ANO</button>
+                            <button class="btn btn-danger btn-sm" onclick="evaluateTip('karlos', ${roundIndex}, ${matchIndex}, false)">NE</button>
                         </div>
-                        <button class="btn btn-success btn-sm" onclick="evaluateTip(${roundIndex}, ${matchIndex}, true)">ANO</button>
-                        <button class="btn btn-danger btn-sm" onclick="evaluateTip(${roundIndex}, ${matchIndex}, false)">NE</button>
+                        <div class="mb-2">
+                            <label>Kuba: </label>
+                            <input type="number" class="tip-input" id="kuba-tip-${roundIndex}-${matchIndex}" min="0" max="2" onchange="saveTip('kuba', ${roundIndex}, ${matchIndex}, this.value)">
+                            <button class="btn btn-success btn-sm" onclick="evaluateTip('kuba', ${roundIndex}, ${matchIndex}, true)">ANO</button>
+                            <button class="btn btn-danger btn-sm" onclick="evaluateTip('kuba', ${roundIndex}, ${matchIndex}, false)">NE</button>
+                        </div>
                     `;
                     roundElement.appendChild(matchElement);
                 });
@@ -127,34 +132,40 @@
             });
         }
 
-        // Funkce pro vyhodnocení tipu
-        function evaluateTip(roundIndex, matchIndex, isCorrect) {
-            const karlosTip = document.getElementById(`karlos-tip-${roundIndex}-${matchIndex}`).value;
-            const kubaTip = document.getElementById(`kuba-tip-${roundIndex}-${matchIndex}`).value;
+        // Funkce pro uložení tipu do Firebase
+        function saveTip(player, roundIndex, matchIndex, tip) {
+            database.ref(`tips/${player}/${roundIndex}/${matchIndex}`).set(tip);
+        }
 
+        // Funkce pro vyhodnocení tipu
+        function evaluateTip(player, roundIndex, matchIndex, isCorrect) {
             if (isCorrect) {
-                if (karlosTip !== '') updatePoints('karlos', 3);
-                if (kubaTip !== '') updatePoints('kuba', 3);
+                updatePoints(player, 3);
             }
 
             // Uložení výsledku do Firebase
-            database.ref('tips').push({
-                roundIndex,
-                matchIndex,
-                karlosTip,
-                kubaTip,
-                isCorrect
-            });
+            database.ref(`results/${player}/${roundIndex}/${matchIndex}`).set(isCorrect);
         }
 
         // Funkce pro aktualizaci bodů
         function updatePoints(player, points) {
             const pointsElement = document.getElementById(`${player}-points`);
             const currentPoints = parseInt(pointsElement.textContent);
-            pointsElement.textContent = currentPoints + points;
+            const newPoints = currentPoints + points;
+            pointsElement.textContent = newPoints;
 
             // Aktualizace bodů v Firebase
-            database.ref('points').child(player).set(currentPoints + points);
+            database.ref('points').child(player).set(newPoints);
+        }
+
+        // Funkce pro reset bodů
+        function resetPoints() {
+            database.ref('points').set({
+                karlos: 0,
+                kuba: 0
+            });
+            document.getElementById('karlos-points').textContent = '0';
+            document.getElementById('kuba-points').textContent = '0';
         }
 
         // Inicializace aplikace
@@ -168,6 +179,23 @@
                 if (points) {
                     document.getElementById('karlos-points').textContent = points.karlos || 0;
                     document.getElementById('kuba-points').textContent = points.kuba || 0;
+                }
+            });
+
+            // Načtení tipů z Firebase
+            database.ref('tips').on('value', (snapshot) => {
+                const tips = snapshot.val();
+                if (tips) {
+                    for (const player in tips) {
+                        for (const roundIndex in tips[player]) {
+                            for (const matchIndex in tips[player][roundIndex]) {
+                                const tipInput = document.getElementById(`${player}-tip-${roundIndex}-${matchIndex}`);
+                                if (tipInput) {
+                                    tipInput.value = tips[player][roundIndex][matchIndex];
+                                }
+                            }
+                        }
+                    }
                 }
             });
         }
