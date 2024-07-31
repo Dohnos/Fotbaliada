@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fotbalové tipy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .tip-input {
+            width: 40px;
+        }
+        .round-title {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Fotbalové tipy</h1>
+        
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h2>Zápasy a tipy</h2>
+                <div id="matches-container"></div>
+            </div>
+            <div class="col-md-4">
+                <h2>Tabulka</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Hráč</th>
+                            <th>Body</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Karlos</td>
+                            <td id="karlos-points">0</td>
+                        </tr>
+                        <tr>
+                            <td>Kuba</td>
+                            <td id="kuba-points">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script>
+        // Firebase konfigurace
+        const firebaseConfig = {
+            apiKey: "AIzaSyDBypohkLROUpKqN1SQpdt-HK_0yt3FzoU",
+            authDomain: "fotbaliada.firebaseapp.com",
+            projectId: "fotbaliada",
+            storageBucket: "fotbaliada.appspot.com",
+            messagingSenderId: "164879470554",
+            appId: "1:164879470554:web:e9883b553be2ff728b3ae3",
+            databaseURL: "https://fotbaliada-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+
+        // Inicializace Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Funkce pro načtení zápasů ze souboru
+        async function loadMatches() {
+            const response = await fetch('matches.txt');
+            const text = await response.text();
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            
+            let currentRound = '';
+            let matches = [];
+            let rounds = [];
+
+            lines.forEach(line => {
+                if (line.includes('. KOLO')) {
+                    if (currentRound !== '') {
+                        rounds.push({ round: currentRound, matches: matches });
+                    }
+                    currentRound = line.trim();
+                    matches = [];
+                } else {
+                    matches.push(line.trim());
+                }
+            });
+
+            if (matches.length > 0) {
+                rounds.push({ round: currentRound, matches: matches });
+            }
+
+            return rounds;
+        }
+
+        // Funkce pro vykreslení zápasů a formulářů pro tipy
+        function renderMatches(rounds) {
+            const container = document.getElementById('matches-container');
+            rounds.forEach((round, roundIndex) => {
+                const roundElement = document.createElement('div');
+                roundElement.className = 'round';
+                roundElement.innerHTML = `<h3 class="round-title">${round.round}</h3>`;
+                
+                round.matches.forEach((match, matchIndex) => {
+                    const matchElement = document.createElement('div');
+                    matchElement.className = 'mb-3';
+                    matchElement.innerHTML = `
+                        <h4>${match}</h4>
+                        <div class="mb-2">
+                            <label>Karlos: </label>
+                            <input type="number" class="tip-input" id="karlos-tip-${roundIndex}-${matchIndex}" min="0" max="2">
+                            <label>Kuba: </label>
+                            <input type="number" class="tip-input" id="kuba-tip-${roundIndex}-${matchIndex}" min="0" max="2">
+                        </div>
+                        <button class="btn btn-success btn-sm" onclick="evaluateTip(${roundIndex}, ${matchIndex}, true)">ANO</button>
+                        <button class="btn btn-danger btn-sm" onclick="evaluateTip(${roundIndex}, ${matchIndex}, false)">NE</button>
+                    `;
+                    roundElement.appendChild(matchElement);
+                });
+                container.appendChild(roundElement);
+            });
+        }
+
+        // Funkce pro vyhodnocení tipu
+        function evaluateTip(roundIndex, matchIndex, isCorrect) {
+            const karlosTip = document.getElementById(`karlos-tip-${roundIndex}-${matchIndex}`).value;
+            const kubaTip = document.getElementById(`kuba-tip-${roundIndex}-${matchIndex}`).value;
+
+            if (isCorrect) {
+                if (karlosTip !== '') updatePoints('karlos', 3);
+                if (kubaTip !== '') updatePoints('kuba', 3);
+            }
+
+            // Uložení výsledku do Firebase
+            database.ref('tips').push({
+                roundIndex,
+                matchIndex,
+                karlosTip,
+                kubaTip,
+                isCorrect
+            });
+        }
+
+        // Funkce pro aktualizaci bodů
+        function updatePoints(player, points) {
+            const pointsElement = document.getElementById(`${player}-points`);
+            const currentPoints = parseInt(pointsElement.textContent);
+            pointsElement.textContent = currentPoints + points;
+
+            // Aktualizace bodů v Firebase
+            database.ref('points').child(player).set(currentPoints + points);
+        }
+
+        // Inicializace aplikace
+        async function init() {
+            const rounds = await loadMatches();
+            renderMatches(rounds);
+
+            // Načtení bodů z Firebase
+            database.ref('points').on('value', (snapshot) => {
+                const points = snapshot.val();
+                if (points) {
+                    document.getElementById('karlos-points').textContent = points.karlos || 0;
+                    document.getElementById('kuba-points').textContent = points.kuba || 0;
+                }
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
