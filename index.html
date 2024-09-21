@@ -71,36 +71,44 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Funkce pro načtení zápasů ze souboru
-        async function loadMatches() {
-            const response = await fetch('matches.txt');
-            const text = await response.text();
-            const lines = text.split('\n').filter(line => line.trim() !== '');
-            
-            let currentRound = '';
-            let matches = [];
-            let rounds = [];
+// Funkce pro načtení zápasů ze souboru
+async function loadMatches() {
+    const response = await fetch('matches.txt');
+    const text = await response.text();
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    
+    let currentRound = '';
+    let matches = [];
+    let rounds = [];
 
-            lines.forEach(line => {
-                if (line.includes('. KOLO')) {
-                    if (currentRound !== '') {
-                        rounds.push({ round: currentRound, matches: matches });
-                    }
-                    currentRound = line.trim();
-                    matches = [];
-                } else {
-                    matches.push(line.trim());
-                }
-            });
-
-            if (matches.length > 0) {
+    lines.forEach(line => {
+        if (line.includes('. KOLO')) {
+            if (currentRound !== '') {
                 rounds.push({ round: currentRound, matches: matches });
             }
-
-            return rounds;
+            currentRound = line.trim();
+            matches = [];
+        } else {
+            matches.push(line.trim());
         }
+    });
 
-        // Funkce pro vykreslení zápasů a formulářů pro tipy
+    if (matches.length > 0) {
+        rounds.push({ round: currentRound, matches: matches });
+    }
+
+    // Filtrovat již odstraněná kola
+    const removedRounds = await getRemovedRounds();
+    return rounds.filter(round => !removedRounds.includes(round.round));
+}
+
+// Funkce pro získání odstraněných kol
+async function getRemovedRounds() {
+    const snapshot = await database.ref('removedRounds').once('value');
+    return snapshot.val() ? Object.keys(snapshot.val()) : [];
+}
+
+// Funkce pro vykreslení zápasů a formulářů pro tipy
 function renderMatches(rounds) {
     const container = document.getElementById('matches-container');
     rounds.forEach((round, roundIndex) => {
@@ -136,6 +144,7 @@ function renderMatches(rounds) {
         removeButton.onclick = function() {
             // Odstranění zápasů a kola
             database.ref(`matches/${roundIndex}`).remove();
+            database.ref('removedRounds').child(round.round).set(true); // Uložení odstraněného kola
             roundElement.remove(); // odstraní vizuální prvek kola
         };
         roundElement.appendChild(removeButton);
@@ -143,6 +152,7 @@ function renderMatches(rounds) {
         container.appendChild(roundElement);
     });
 }
+
 
         // Funkce pro uložení tipu do Firebase
         function saveTip(player, roundIndex, matchIndex, tip) {
