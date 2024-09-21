@@ -21,8 +21,12 @@
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">Fotbalové tipy</h1>
-
+        
         <div class="row mb-4">
+            <div class="col-md-8">
+                <h2>Zápasy a tipy</h2>
+                <div id="matches-container"></div>
+            </div>
             <div class="col-md-4">
                 <h2>Tabulka</h2>
                 <table class="table">
@@ -44,11 +48,6 @@
                     </tbody>
                 </table>
                 <button class="btn btn-warning" onclick="resetPoints()">Reset bodů</button>
-                <button class="btn btn-danger" onclick="deleteRounds()">Odstranit kola a zápasy</button>
-            </div>
-            <div class="col-md-8">
-                <h2>Zápasy a tipy</h2>
-                <div id="matches-container"></div>
             </div>
         </div>
     </div>
@@ -104,7 +103,6 @@
         // Funkce pro vykreslení zápasů a formulářů pro tipy
         function renderMatches(rounds) {
             const container = document.getElementById('matches-container');
-            container.innerHTML = ''; // Clear previous matches
             rounds.forEach((round, roundIndex) => {
                 const roundElement = document.createElement('div');
                 roundElement.className = 'round';
@@ -144,6 +142,8 @@
             if (isCorrect) {
                 updatePoints(player, 3);
             }
+
+            // Uložení výsledku do Firebase
             database.ref(`results/${player}/${roundIndex}/${matchIndex}`).set(isCorrect);
         }
 
@@ -154,6 +154,7 @@
             const newPoints = currentPoints + points;
             pointsElement.textContent = newPoints;
 
+            // Aktualizace bodů v Firebase
             database.ref('points').child(player).set(newPoints);
         }
 
@@ -167,18 +168,12 @@
             document.getElementById('kuba-points').textContent = '0';
         }
 
-        // Funkce pro odstranění kol a zápasů
-        function deleteRounds() {
-            database.ref('tips').remove(); // Smaže všechny tipy
-            database.ref('results').remove(); // Smaže všechny výsledky
-            renderMatches([]); // Vyčistí zápasy z UI
-        }
-
         // Inicializace aplikace
         async function init() {
             const rounds = await loadMatches();
             renderMatches(rounds);
 
+            // Načtení bodů z Firebase
             database.ref('points').on('value', (snapshot) => {
                 const points = snapshot.val();
                 if (points) {
@@ -187,6 +182,7 @@
                 }
             });
 
+            // Načtení tipů z Firebase
             database.ref('tips').on('value', (snapshot) => {
                 const tips = snapshot.val();
                 if (tips) {
