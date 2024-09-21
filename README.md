@@ -1,8 +1,8 @@
-# Fotbalové tipy
+# Fotbaliada
 
 ## Popis
 
-Fotbalové tipy je jednoduchá webová aplikace určená pro fanoušky fotbalu, kteří si chtějí vzájemně tipovat výsledky zápasů a sledovat své skóre. Aplikace umožňuje dvěma hráčům (Karlos a Kuba) zadávat tipy na jednotlivé zápasy a vyhodnocovat je podle skutečných výsledků. 
+Fotbaliada je jednoduchá webová aplikace určená pro fanoušky fotbalu, kteří si chtějí vzájemně tipovat výsledky zápasů a sledovat své skóre. Aplikace umožňuje dvěma hráčům (Karlos a Kuba) zadávat tipy na jednotlivé zápasy a vyhodnocovat je podle skutečných výsledků. 
 
 ### Hlavní funkce
 
