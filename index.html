@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
@@ -18,19 +18,15 @@
         }
         .alert {
             display: none;
-        }
-        .alert-success {
-            color: #fff;
-            background-color: #28a745;
-            border-color: #28a745;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">Fotbalové tipy</h1>
-        
-        <!-- Tabulka hráčů je nahoře -->
+
+        <!-- Tabulka nad zápasy -->
         <div class="row mb-4">
             <div class="col-md-4">
                 <h2>Tabulka</h2>
@@ -64,8 +60,8 @@
             </div>
         </div>
 
-        <!-- Alert pro úspěšné zadání tipu nebo vyhodnocení -->
-        <div id="alert-container" class="alert alert-success"></div>
+        <div id="alerts"></div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
@@ -92,7 +88,7 @@
             const response = await fetch('matches.txt');
             const text = await response.text();
             const lines = text.split('\n').filter(line => line.trim() !== '');
-            
+
             let currentRound = '';
             let matches = [];
             let rounds = [];
@@ -113,25 +109,16 @@
                 rounds.push({ round: currentRound, matches: matches });
             }
 
-            return rounds;
+            return rounds.filter(round => round.round.includes('9. KOLO'));
         }
 
         // Funkce pro vykreslení zápasů a formulářů pro tipy
-        async function renderMatches() {
-            const rounds = await loadMatches();
-            const evaluatedRoundsSnapshot = await database.ref('evaluatedRounds').once('value');
-            const evaluatedRounds = evaluatedRoundsSnapshot.val() || {};
-
+        function renderMatches(rounds) {
             const container = document.getElementById('matches-container');
+            container.innerHTML = ''; // Vymazání starých zápasů
             rounds.forEach((round, roundIndex) => {
-                // Pokud je kolo již vyhodnoceno, nepřidá se do stránky
-                if (evaluatedRounds[roundIndex]) {
-                    return;
-                }
-
                 const roundElement = document.createElement('div');
                 roundElement.className = 'round';
-                roundElement.id = `round-${roundIndex}`;
                 roundElement.innerHTML = `<h3 class="round-title">${round.round}</h3>`;
                 
                 round.matches.forEach((match, matchIndex) => {
@@ -155,84 +142,42 @@
                     roundElement.appendChild(matchElement);
                 });
 
-                // Přidání tlačítka "VYHODNOCENO"
                 const evaluateButton = document.createElement('button');
-                evaluateButton.className = 'btn btn-warning mt-2';
+                evaluateButton.className = 'btn btn-primary mt-3';
                 evaluateButton.textContent = 'VYHODNOCENO';
-                evaluateButton.onclick = () => evaluateRound(roundIndex);
+                evaluateButton.onclick = () => deleteRound(roundIndex);
                 roundElement.appendChild(evaluateButton);
 
                 container.appendChild(roundElement);
             });
-
-            // Načíst a vyplnit dříve uložené tipy po načtení stránky
-            database.ref('tips').once('value').then((snapshot) => {
-                const tips = snapshot.val();
-                if (tips) {
-                    for (const player in tips) {
-                        for (const roundIndex in tips[player]) {
-                            for (const matchIndex in tips[player][roundIndex]) {
-                                const tipInput = document.getElementById(`${player}-tip-${roundIndex}-${matchIndex}`);
-                                if (tipInput) {
-                                    tipInput.value = tips[player][roundIndex][matchIndex];
-                                }
-                            }
-                        }
-                    }
-                }
-            });
         }
 
-        // Funkce pro uložení tipu do Firebase a zobrazení upozornění
+        // Funkce pro uložení tipu do Firebase
         function saveTip(player, roundIndex, matchIndex, tip) {
-            database.ref(`tips/${player}/${roundIndex}/${matchIndex}`).set(tip)
-                .then(() => {
-                    showAlert('Tip zadán');
-                })
-                .catch((error) => {
-                    console.error('Chyba při ukládání tipu:', error);
-                });
+            database.ref(`tips/${player}/${roundIndex}/${matchIndex}`).set(tip);
+            showAlert('Tip zadán!', 'success');
         }
 
-        // Funkce pro vyhodnocení tipu a zobrazení upozornění
+        // Funkce pro vyhodnocení tipu
         function evaluateTip(player, roundIndex, matchIndex, isCorrect) {
             if (isCorrect) {
                 updatePoints(player, 3);
             }
 
             // Uložení výsledku do Firebase
-            database.ref(`results/${player}/${roundIndex}/${matchIndex}`).set(isCorrect)
-                .then(() => {
-                    showAlert('Tip vyhodnocen');
-                })
-                .catch((error) => {
-                    console.error('Chyba při vyhodnocení tipu:', error);
-                });
+            database.ref(`results/${player}/${roundIndex}/${matchIndex}`).set(isCorrect);
+            showAlert('Vyhodnoceno!', 'success');
         }
 
-        // Funkce pro zobrazení upozornění
-        function showAlert(message) {
-            const alertContainer = document.getElementById('alert-container');
-            alertContainer.textContent = message;
-            alertContainer.style.display = 'block';
-            setTimeout(() => {
-                alertContainer.style.display = 'none';
-            }, 2000);
-        }
+        // Funkce pro aktualizaci bodů
+        function updatePoints(player, points) {
+            const pointsElement = document.getElementById(`${player}-points`);
+            const currentPoints = parseInt(pointsElement.textContent);
+            const newPoints = currentPoints + points;
+            pointsElement.textContent = newPoints;
 
-        // Funkce pro vyhodnocení a odstranění kola
-        function evaluateRound(roundIndex) {
-            database.ref(`evaluatedRounds/${roundIndex}`).set(true)
-                .then(() => {
-                    const roundElement = document.getElementById(`round-${roundIndex}`);
-                    if (roundElement) {
-                        roundElement.remove();
-                    }
-                    showAlert('Kolo vyhodnoceno');
-                })
-                .catch((error) => {
-                    console.error('Chyba při vyhodnocení kola:', error);
-                });
+            // Aktualizace bodů v Firebase
+            database.ref('points').child(player).set(newPoints);
         }
 
         // Funkce pro reset bodů
@@ -245,9 +190,35 @@
             document.getElementById('kuba-points').textContent = '0';
         }
 
+        // Funkce pro smazání kola
+        function deleteRound(roundIndex) {
+            database.ref(`matches/${roundIndex}`).remove();
+            const container = document.getElementById('matches-container');
+            const roundElement = container.querySelector(`.round:nth-child(${roundIndex + 1})`);
+            if (roundElement) {
+                roundElement.remove();
+            }
+            showAlert('Kolo vyhodnoceno a smazáno!', 'success');
+        }
+
+        // Funkce pro zobrazení upozornění
+        function showAlert(message, type) {
+            const alertsContainer = document.getElementById('alerts');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alertsContainer.appendChild(alert);
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
         // Inicializace aplikace
         async function init() {
-            renderMatches();
+            const rounds = await loadMatches();
+            renderMatches(rounds);
 
             // Načtení bodů z Firebase
             database.ref('points').on('value', (snapshot) => {
@@ -255,6 +226,23 @@
                 if (points) {
                     document.getElementById('karlos-points').textContent = points.karlos || 0;
                     document.getElementById('kuba-points').textContent = points.kuba || 0;
+                }
+            });
+
+            // Načtení tipů z Firebase
+            database.ref('tips').on('value', (snapshot) => {
+                const tips = snapshot.val();
+                if (tips) {
+                    for (const player in tips) {
+                        for (const roundIndex in tips[player]) {
+                            for (const matchIndex in tips[player][roundIndex]) {
+                                const tipInput = document.getElementById(`${player}-tip-${roundIndex}-${matchIndex}`);
+                                if (tipInput) {
+                                    tipInput.value = tips[player][roundIndex][matchIndex];
+                                }
+                            }
+                        }
+                    }
                 }
             });
         }
