@@ -77,15 +77,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script>
         // Firebase konfigurace
-        const firebaseConfig = {
-            apiKey: "AIzaSyDBypohkLROUpKqN1SQpdt-HK_0yt3FzoU",
-            authDomain: "fotbaliada.firebaseapp.com",
-            projectId: "fotbaliada",
-            storageBucket: "fotbaliada.appspot.com",
-            messagingSenderId: "164879470554",
-            appId: "1:164879470554:web:e9883b553be2ff728b3ae3",
-            databaseURL: "https://fotbaliada-default-rtdb.europe-west1.firebasedatabase.app/"
-        };
+        const firebaseConfig
 
         // Inicializace Firebase
         firebase.initializeApp(firebaseConfig);
@@ -134,13 +126,13 @@
                     matchElement.innerHTML = `
                         <h4>${match}</h4>
                         <div class="mb-2">
-                            <label><img src="https://i.postimg.cc/LsK69S6f/1.png" alt="Druhý obrázek" style="width: 30px; height: 30px; vertical-align: middle;">Karlos: </label>
+                            <label><img src="">Karlos: </label>
                             <input type="number" class="tip-input" id="karlos-tip-${roundIndex}-${matchIndex}" min="0" max="2" onchange="saveTip('karlos', ${roundIndex}, ${matchIndex}, this.value)">
                             <button class="btn btn-success btn-sm" onclick="evaluateTip('karlos', ${roundIndex}, ${matchIndex}, true)">ANO</button>
                             <button class="btn btn-danger btn-sm" onclick="evaluateTip('karlos', ${roundIndex}, ${matchIndex}, false)">NE</button>
                         </div>
                         <div class="mb-2">
-                            <label><img src="https://i.postimg.cc/YqrF71yk/Giannis-Zographos-English-Football-Club-Leicester-City-256.png" alt="Giannis Zographos" style="width: 30px; height: 30px; vertical-align: middle;"> Kuba: </label>
+                            <label><img src="" style="width: 30px; height: 30px; vertical-align: middle;"> Kuba: </label>
                             <input type="number" class="tip-input" id="kuba-tip-${roundIndex}-${matchIndex}" min="0" max="2" onchange="saveTip('kuba', ${roundIndex}, ${matchIndex}, this.value)">
                             <button class="btn btn-success btn-sm" onclick="evaluateTip('kuba', ${roundIndex}, ${matchIndex}, true)">ANO</button>
                             <button class="btn btn-danger btn-sm" onclick="evaluateTip('kuba', ${roundIndex}, ${matchIndex}, false)">NE</button>
