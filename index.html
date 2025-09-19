@@ -119,7 +119,7 @@
 
         .match-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px;
+            margin-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px; flex-wrap: wrap; gap: 10px;
         }
         body.light-mode .match-header { border-bottom: 1px solid rgba(0, 0, 0, 0.08); }
         .match-score { font-size: 1.2rem; font-weight: bold; color: #4facfe; }
@@ -298,7 +298,9 @@
                 showSection('dashboard');
             } catch (error) {
                 showToast(error.message, 'danger');
-                document.getElementById('matches-section').innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+                const errorHtml = `<div class="alert alert-danger"><strong>Chyba:</strong> ${error.message}</div>`;
+                document.getElementById('dashboard-section').innerHTML = errorHtml;
+                document.getElementById('matches-section').innerHTML = errorHtml;
             }
         };
 
@@ -307,42 +309,45 @@
                 allUsers = snapshot.val() || {};
                 renderAllSections();
             }, handleFirebaseError);
+
+            // Listen for changes in results to re-render everything
+            database.ref('matchResults').on('value', () => renderAllSections(), handleFirebaseError);
         };
 
         const loadMatchesFromFile = async () => {
-            try {
-                const response = await fetch('matches.txt');
-                if (!response.ok) throw new Error('Soubor matches.txt nebyl nalezen nebo k němu nemám přístup.');
-                const text = await response.text();
-                const lines = text.split('\n').filter(line => line.trim() !== '');
-                
-                if (lines.length === 0) throw new Error('Soubor matches.txt je prázdný.');
-
-                let currentRound = '';
-                const rounds = [];
-                let roundIndex = -1;
-
-                lines.forEach(line => {
-                    const isRoundTitle = !line.includes('vs.');
-                    if (isRoundTitle) {
-                        currentRound = line.trim();
-                        rounds.push({ round: currentRound, matches: [] });
-                        roundIndex++;
-                    } else {
-                        if (roundIndex > -1) {
-                             const matchIndex = rounds[roundIndex].matches.length;
-                             rounds[roundIndex].matches.push({
-                                 id: `r${roundIndex}m${matchIndex}`, // deterministic ID
-                                 name: line.trim()
-                             });
-                        }
-                    }
-                });
-                return rounds;
-            } catch (error) {
-                console.error("Chyba při načítání zápasů:", error);
-                throw error; // Re-throw to be caught by initApp
+            const response = await fetch('matches.txt');
+            if (!response.ok) {
+                if(response.status === 404) throw new Error('Soubor `matches.txt` nebyl nalezen. Ujistěte se, že existuje ve stejné složce jako `index.html`.');
+                throw new Error(`Chyba při načítání souboru zápasů (HTTP status: ${response.status}).`);
             }
+            const text = await response.text();
+            if (!text.trim()) throw new Error('Soubor `matches.txt` je prázdný.');
+
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            
+            let currentRound = 'Neznámé kolo';
+            const rounds = [];
+            let roundIndex = -1;
+
+            lines.forEach(line => {
+                const isRoundTitle = !line.toLowerCase().includes('vs.');
+                if (isRoundTitle) {
+                    currentRound = line.trim();
+                    rounds.push({ round: currentRound, matches: [] });
+                    roundIndex++;
+                } else {
+                    if (roundIndex === -1) { // In case the file starts with a match
+                        rounds.push({ round: currentRound, matches: [] });
+                        roundIndex = 0;
+                    }
+                    const matchIndex = rounds[roundIndex].matches.length;
+                    rounds[roundIndex].matches.push({
+                        id: `r${roundIndex}m${matchIndex}`, // deterministic ID based on position
+                        name: line.trim()
+                    });
+                }
+            });
+            return rounds;
         };
         
         // --- RENDERING ---
@@ -401,7 +406,7 @@
                 username,
                 points: points[username] || 0,
                 totalBet: totalBets[username] || 0
-            })).sort((a, b) => b.points - a.points);
+            })).sort((a, b) => b.points - a.points || b.totalBet - a.totalBet);
             
             let tableBodyHTML = '';
             if (playerList.length > 0) {
@@ -443,12 +448,13 @@
             allMatches.forEach(round => {
                 html += `<h3 class="mt-4 mb-3">${round.round}</h3>`;
                 round.matches.forEach(match => {
-                    const officialResultText = matchResults[match.id] !== undefined ? `Výsledek: ${matchResults[match.id]}` : 'Čeká na vyhodnocení';
-                    const isEvaluated = matchResults[match.id] !== undefined;
+                    const officialResult = matchResults[match.id];
+                    const officialResultText = officialResult !== undefined ? `Výsledek: ${officialResult}` : 'Čeká na vyhodnocení';
+                    const isEvaluated = officialResult !== undefined;
 
                     let playerRowsHTML = '';
                     Object.keys(allUsers).forEach(username => {
-                        const tip = allTips[username]?.[match.id] ?? '';
+                        const tip = allTips[username]?.[match.id];
                         const bet = allBets[username]?.[match.id] ?? '';
                         const evaluation = allEvals[username]?.[match.id] ?? 'nevyhodnoceno';
                         const isCurrentUser = username === currentPlayer;
@@ -457,7 +463,7 @@
                             <div class="player-tip-row">
                                 <span><i class="fas fa-user me-2 opacity-75"></i>${username}</span>
                                 <select class="form-select form-select-sm w-auto" onchange="saveTip('${match.id}', this.value)" ${!isCurrentUser || isEvaluated ? 'disabled' : ''}>
-                                    <option value="" ${tip === '' ? 'selected' : ''}>Tip</option>
+                                    <option value="" ${tip === undefined ? 'selected' : ''}>Tip</option>
                                     <option value="1" ${tip === 1 ? 'selected' : ''}>1</option>
                                     <option value="0" ${tip === 0 ? 'selected' : ''}>0</option>
                                     <option value="2" ${tip === 2 ? 'selected' : ''}>2</option>
@@ -511,9 +517,9 @@
                 round.matches.forEach(match => {
                     if (matchResults[match.id] === undefined) {
                         unevaluatedMatchesHTML += `
-                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
-                                <span>${match.name}</span>
-                                <div>
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded flex-wrap">
+                                <span class="me-3">${match.name}</span>
+                                <div class="btn-group">
                                     <button class="btn btn-sm btn-success" onclick="adminEvaluateMatch('${match.id}', 1)">1</button>
                                     <button class="btn btn-sm btn-warning" onclick="adminEvaluateMatch('${match.id}', 0)">0</button>
                                     <button class="btn btn-sm btn-danger" onclick="adminEvaluateMatch('${match.id}', 2)">2</button>
@@ -587,10 +593,49 @@
                         if (pin) document.getElementById('my-pin').value = '';
                     })
                     .catch(handleFirebaseError);
+            } else {
+                showToast('Nebyly provedeny žádné změny.', 'info');
             }
         };
 
-        const generateQR = async () => { /* ... (stejná funkčnost jako v předchozí verzi) ... */ };
+        const generateQR = async () => {
+             const pointsSnap = await database.ref('points').once('value');
+             const totalBetsSnap = await database.ref('totalBets').once('value');
+             const points = pointsSnap.val() || {};
+             const totalBets = totalBetsSnap.val() || {};
+
+             if (Object.keys(points).length === 0) return showToast('Soutěž ještě nezačala nebo nemá žádné body.', 'info');
+
+             let maxPoints = -1;
+             Object.values(points).forEach(score => {
+                 if (score > maxPoints) maxPoints = score;
+             });
+
+             if(maxPoints <= 0) return showToast('Nikdo zatím nezískal body.', 'info');
+
+             const winners = Object.keys(points).filter(user => points[user] === maxPoints);
+
+             if (!winners.includes(currentPlayer)) return showToast('Nejsi vítěz, QR nelze generovat!', 'danger');
+
+             const totalPool = Object.values(totalBets).reduce((sum, bet) => sum + bet, 0);
+             const winnings = winners.length > 0 ? totalPool / winners.length : 0;
+             if (winnings <= 0) return showToast('Výhra je 0 Kč, QR nelze generovat.', 'info');
+
+             const accountSnap = await database.ref(`profiles/${currentPlayer}/account`).once('value');
+             const account = accountSnap.val();
+             if (!account) return showToast('Nejprve zadejte číslo účtu v profilu!', 'danger');
+
+             const qrContainer = document.getElementById('qr-container');
+             const canvas = document.getElementById('qr-canvas');
+             const paymentDetails = `SPD*1.0*ACC:${account.replace('-', '')}*AM:${winnings.toFixed(2)}*CC:CZK*MSG:Vyhra FTB Tipy`;
+
+             QRCode.toCanvas(canvas, paymentDetails, { width: 200 }, error => {
+                 if (error) return handleFirebaseError(error);
+                 document.getElementById('qr-details').textContent = `Platba ${winnings.toFixed(2)} Kč na účet ${account}`;
+                 qrContainer.classList.remove('d-none');
+                 showToast('QR kód úspěšně vygenerován!', 'success');
+             });
+        };
 
         // --- ADMIN ACTIONS ---
         const confirmReset = () => {
@@ -610,36 +655,26 @@
             const allTips = tipsSnapshot.val() || {};
             
             const updates = {};
-            const pointUpdates = [];
-            
-            Object.keys(allUsers).forEach(username => {
+            const pointPromises = Object.keys(allUsers).map(username => {
                 const userTip = allTips[username]?.[matchId];
                 if (userTip !== undefined) {
                     if (parseInt(userTip) === result) {
                         updates[`/evaluations/${username}/${matchId}`] = 'ok';
-                        pointUpdates.push(database.ref(`points/${username}`).transaction(points => (points || 0) + 3));
+                        return database.ref(`points/${username}`).transaction(points => (points || 0) + 3);
                     } else {
                         updates[`/evaluations/${username}/${matchId}`] = 'spatne';
                     }
                 }
+                return Promise.resolve();
             });
+            
             await database.ref().update(updates);
-            await Promise.all(pointUpdates);
+            await Promise.all(pointPromises);
             showToast('Zápas úspěšně vyhodnocen a body připsány!', 'success');
         };
 
         // --- UTILITIES ---
-        const setupNavigation = () => { /* ... (stejná funkčnost) ... */ };
-        const showSection = (sectionId) => { /* ... (stejná funkčnost) ... */ };
-        const toggleDarkMode = () => { /* ... (stejná funkčnost) ... */ };
-        const showToast = (message, type = 'info') => { /* ... (stejná funkčnost) ... */ };
-        const handleFirebaseError = (error) => { console.error("Firebase Error:", error); showToast(`Chyba databáze: ${error.message}`, 'danger'); };
-        
-        // --- On Page Load ---
-        window.onload = () => { if (sessionStorage.getItem('currentPlayer')) initApp(); };
-        
-        // --- Implementace pomocných funkcí (zkráceno pro přehlednost)
-        const setupNav = () => {
+        const setupNavigation = () => {
             const navLinks = document.querySelectorAll('.nav-link');
             navLinks.forEach(link => link.addEventListener('click', e => {
                 e.preventDefault();
@@ -648,32 +683,37 @@
                 showSection(e.target.dataset.section);
             }));
         };
-        const showSec = (sectionId) => {
+        const showSection = (sectionId) => {
             document.querySelectorAll('.app-section').forEach(s => s.classList.add('d-none'));
             document.getElementById(`${sectionId}-section`).classList.remove('d-none');
         };
-        const toggleDM = () => {
+        const toggleDarkMode = () => {
             document.body.classList.toggle('light-mode');
             const icon = document.getElementById('dark-mode-icon');
             icon.className = document.body.classList.contains('light-mode') ? 'fas fa-sun' : 'fas fa-moon';
+            localStorage.setItem('darkMode', document.body.classList.contains('light-mode') ? 'enabled' : 'disabled');
         };
-        const showT = (message, type = 'info') => {
+        const showToast = (message, type = 'info') => {
             const toastEl = document.getElementById('liveToast');
             const toastHeader = toastEl.querySelector('.toast-header');
             toastEl.querySelector('.toast-body').textContent = message;
-            toastHeader.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'bg-info', 'text-white');
-            let bgClass = `bg-${type}`;
+            toastHeader.className = 'toast-header'; // Reset classes
+            const bgClass = `bg-${type}`;
             if(type === 'success' || type === 'danger') toastHeader.classList.add('text-white');
             toastHeader.classList.add(bgClass);
             new bootstrap.Toast(toastEl).show();
         };
-
-        // Re-assigning to keep onclick handlers working
-        setupNavigation = setupNav;
-        showSection = showSec;
-        toggleDarkMode = toggleDM;
-        showToast = showT;
-
+        const handleFirebaseError = (error) => { console.error("Firebase Error:", error); showToast(`Chyba databáze: ${error.message}`, 'danger'); };
+        
+        // --- On Page Load ---
+        window.onload = () => {
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                toggleDarkMode();
+            }
+            if (sessionStorage.getItem('currentPlayer')) {
+                initApp();
+            }
+        };
     </script>
 </body>
 </html>
