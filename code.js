@@ -9,8 +9,6 @@ const firebaseConfig = {
     appId: "1:239337886217:web:9b67dffaba23d6e86dded8"
 };
 const ADMIN_USERNAME = 'kuba';
-const COMPETITION_START = '2024-09-20';
-const COMPETITION_END = '2024-10-20';
 
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
@@ -23,6 +21,8 @@ async function register() {
     toggleButtonState(btn, true, 'Registruji...');
     const username = document.getElementById('username').value.trim().toLowerCase();
     const pin = document.getElementById('pin').value.trim();
+    const favoriteTeam = document.getElementById('favoriteTeam').value.trim();
+
     if (username.length < 3) { showToast('Jméno musí mít alespoň 3 znaky!', 'danger'); toggleButtonState(btn, false); return; }
     if (!/^\d{4}$/.test(pin)) { showToast('PIN musí být 4 číslice!', 'danger'); toggleButtonState(btn, false); return; }
     
@@ -31,7 +31,13 @@ async function register() {
         if (snapshot.exists()) {
             showToast('Uživatel s tímto jménem již existuje!', 'danger');
         } else {
-            await database.ref(`users/${username}`).set({ pin, registeredAt: new Date().toISOString() });
+            const updates = {};
+            updates[`/users/${username}`] = { pin, registeredAt: new Date().toISOString() };
+            if (favoriteTeam) {
+                updates[`/profiles/${username}/favoriteTeam`] = favoriteTeam;
+            }
+            await database.ref().update(updates);
+
             sessionStorage.setItem('currentPlayer', username);
             showToast(`Registrace úspěšná, vítej ${username}! 🎉`, 'success');
             await initApp();
@@ -106,7 +112,10 @@ async function loadMatchesFromFile() {
     try {
         const response = await fetch('matches.txt');
         if (!response.ok) {
-            if(response.status === 404) throw new Error('Soubor `matches.txt` nebyl nalezen.');
+            if (response.status === 404) {
+                 console.warn('Soubor `matches.txt` nebyl nalezen. Sekce Zápasy bude prázdná.');
+                 return []; // Return empty array, don't throw error
+            }
             throw new Error(`Chyba při načítání souboru zápasů (HTTP status: ${response.status}).`);
         }
         const text = await response.text();
@@ -135,7 +144,8 @@ async function loadMatchesFromFile() {
         return rounds;
     } catch(e) {
         console.error("Failed to load or parse matches.txt:", e);
-        throw new Error("Nepodařilo se načíst soubor se zápasy. Zkontrolujte konzoli pro více detailů.");
+        showToast("Nepodařilo se načíst soubor se zápasy.", 'danger');
+        return [];
     }
 }
 
@@ -162,8 +172,8 @@ function renderDashboard(data) {
     const myBet = data.totalBets?.[currentPlayer] || 0;
     const totalPool = Object.values(data.totalBets || {}).reduce((sum, bet) => sum + (Number(bet) || 0), 0);
     
-    const { percentage, daysRemaining } = getCompetitionProgress();
-    const progressText = daysRemaining > 0 ? `Zbývá ${daysRemaining} dní` : 'Kolo skončilo';
+    const { monthName, progressPercentage } = getMonthProgress();
+    const hotTip = getHotTip(data);
 
     document.getElementById('dashboard-section').innerHTML = `
         <h2 class="mb-4">Dashboard</h2>
@@ -172,9 +182,9 @@ function renderDashboard(data) {
                 <div class="row">
                     <div class="col-md-6 mb-4">
                         <div class="card p-3 h-100">
-                            <div class="card-body">
+                            <div class="card-body d-flex flex-column">
                                 <h5><i class="fas fa-user-circle me-2 text-primary"></i>Můj přehled</h5>
-                                <div class="text-center my-3">
+                                <div class="text-center my-auto">
                                     <p class="display-5 fw-bold mb-0">${myPoints}</p><small class="text-muted">BODŮ</small>
                                     <hr class="my-2">
                                     <p class="display-6 fw-bold mb-0">${myBet.toLocaleString('cs-CZ')} <small class="fs-6">Kč</small></p><small class="text-muted">VSAZENO</small>
@@ -184,11 +194,36 @@ function renderDashboard(data) {
                     </div>
                     <div class="col-md-6 mb-4">
                         <div class="card p-3 h-100 bg-primary text-white">
-                            <div class="card-body">
+                            <div class="card-body d-flex flex-column">
                                 <h5><i class="fas fa-coins me-2"></i>Celkový bank</h5>
-                                <div class="text-center my-4">
+                                <div class="text-center my-auto">
                                     <p class="display-4 fw-bold mb-0">${totalPool.toLocaleString('cs-CZ')} <small class="fs-4">Kč</small></p>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body p-4 competition-progress-card">
+                                <div class="progress-circle-container">
+                                     <div class="progress-circle" style="--progress: ${progressPercentage};"></div>
+                                     <div class="progress-circle-value">${progressPercentage}%</div>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">Soutěžní kolo</h5>
+                                    <p class="fw-bold fs-4 mb-0">${monthName}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="col-md-6 mb-4">
+                        <div class="card h-100 hot-tip-card">
+                            <div class="card-body p-4">
+                                <h5 class="mb-2"><i class="fas fa-fire me-2"></i>Horký Tip</h5>
+                                <p class="fw-bold mb-1">${hotTip.name}</p>
+                                <small>${hotTip.count > 0 ? `Nejčastěji tipováno (${hotTip.count}x)`: 'Buď první, kdo si tipne!'}</small>
                             </div>
                         </div>
                     </div>
@@ -203,49 +238,58 @@ function renderDashboard(data) {
                     </div>
                 </a>
             </div>
-        </div>
-        <div class="card">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h5 class="mb-0">Průběh kola</h5>
-                    <span class="fw-bold">${progressText}</span>
-                </div>
-                <div class="progress" role="progressbar" style="height: 20px;">
-                    <div class="progress-bar" style="width: ${percentage}%">${Math.round(percentage)}%</div>
-                </div>
-            </div>
         </div>`;
+    // Animate progress circle after render
+    setTimeout(() => {
+        const circle = document.querySelector('.progress-circle');
+        if (circle) circle.style.setProperty('--progress', progressPercentage);
+    }, 100);
 }
 
 function renderLeaderboard(data) {
     const points = data.points || {};
     const totalBets = data.totalBets || {};
+    const profiles = data.profiles || {};
+    const evaluations = data.evaluations || {};
+
     const playerList = Object.keys(allUsers).map(username => ({
-        username, points: points[username] || 0, totalBet: totalBets[username] || 0
+        username, 
+        points: points[username] || 0, 
+        totalBet: totalBets[username] || 0,
+        favoriteTeam: profiles[username]?.favoriteTeam || '',
+        formStreak: calculatePlayerForm(username, evaluations, allMatches)
     })).sort((a, b) => b.points - a.points || b.totalBet - a.totalBet);
     
     let tableBodyHTML = '';
     if (playerList.length > 0) {
         playerList.forEach((player, index) => {
+            const formIcon = player.formStreak >= 3 ? `<i class="fas fa-fire form-streak" title="Série ${player.formStreak} správných tipů"></i>` : '';
             tableBodyHTML += `
                 <tr class="${player.username === currentPlayer ? 'table-light' : ''}">
                     <td class="fw-bold text-center">${index + 1}</td>
-                    <td><div class="d-flex align-items-center">${generateAvatar(player.username)}<span class="ms-3 fw-bold">${player.username}</span></div></td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            ${generateAvatar(player.username)}
+                            <span class="ms-3 fw-bold">${player.username}</span>
+                            ${formIcon}
+                        </div>
+                    </td>
+                    <td class="leaderboard-team team-col">${player.favoriteTeam}</td>
                     <td class="text-center">${player.points}</td>
                     <td>${player.totalBet.toLocaleString('cs-CZ')} Kč</td>
                 </tr>`;
         });
     } else {
-        tableBodyHTML = '<tr><td colspan="4" class="text-center p-5"><p class="mb-0 text-muted">Zatím žádní hráči v žebříčku.</p></td></tr>';
+        tableBodyHTML = '<tr><td colspan="5" class="text-center p-5"><p class="mb-0 text-muted">Zatím žádní hráči v žebříčku.</p></td></tr>';
     }
 
-    document.getElementById('leaderboard-section').innerHTML = `<h2 class="mb-4">Žebříček hráčů</h2><div class="card"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th class="text-center">#</th><th>Hráč</th><th class="text-center">Body</th><th>Sázka</th></tr></thead><tbody>${tableBodyHTML}</tbody></table></div></div></div>`;
+    document.getElementById('leaderboard-section').innerHTML = `<h2 class="mb-4">Žebříček hráčů</h2><div class="card"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th class="text-center">#</th><th>Hráč</th><th class="team-col">Tým</th><th class="text-center">Body</th><th>Sázka</th></tr></thead><tbody>${tableBodyHTML}</tbody></table></div></div></div>`;
 }
 
 function renderMatches(data) {
     let html = `<h2 class="mb-4">Zápasy a tipy</h2>`;
     if (!allMatches || allMatches.length === 0) {
-        html += '<div class="card card-body text-center"><i class="fa-solid fa-calendar-times fa-2x text-muted mb-3"></i><p class="mb-0 text-muted">Aktuálně nejsou k dispozici žádné zápasy.</p></div>';
+        html += '<div class="card card-body text-center"><i class="fa-solid fa-calendar-times fa-2x text-muted mb-3"></i><p class="mb-0 text-muted">Aktuálně nejsou k dispozici žádné zápasy.</p><p class="small text-muted">Ujistěte se, že soubor `matches.txt` existuje a je nahraný.</p></div>';
         document.getElementById('matches-section').innerHTML = html;
         return;
     }
@@ -258,27 +302,32 @@ function renderMatches(data) {
         round.matches.forEach(match => {
             const officialResult = matchResults[match.id], isEvaluated = officialResult !== undefined;
             const myTip = allTips[currentPlayer]?.[match.id], myBet = allBets[currentPlayer]?.[match.id] ?? '';
-            html += `<div class="card mb-3"><div class="card-body"><div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><h5 class="mb-0"><i class="fas fa-futbol me-2"></i>${match.name}</h5><div class="d-flex align-items-center gap-2">${isEvaluated ? `<span class="badge bg-primary-subtle text-primary-emphasis rounded-pill p-2">Výsledek: ${officialResult}</span>` : ''}<button class="btn btn-sm btn-outline-primary" onclick="openPerplexityAnalysis('${match.name}')"><i class="fas fa-search me-1"></i>Analýza Perplexity</button></div></div><div class="p-3 rounded my-tip-row"><div class="row align-items-center gx-3"><div class="col-12 col-md-5 mb-2 mb-md-0"><div class="btn-group w-100 tip-btn-group" role="group"><button type="button" class="btn ${myTip === 1 ? 'active' : ''}" onclick="saveTip('${match.id}', 1)" ${isEvaluated ? 'disabled' : ''}>1</button><button type="button" class="btn ${myTip === 0 ? 'active' : ''}" onclick="saveTip('${match.id}', 0)" ${isEvaluated ? 'disabled' : ''}>0</button><button type="button" class="btn ${myTip === 2 ? 'active' : ''}" onclick="saveTip('${match.id}', 2)" ${isEvaluated ? 'disabled' : ''}>2</button></div></div><div class="col-12 col-md-7"><div class="input-group"><input type="number" class="form-control" placeholder="Sázka" min="0" max="1000" step="10" value="${myBet}" onchange="saveBet('${match.id}', this.value)" ${isEvaluated ? 'disabled' : ''}><span class="input-group-text">Kč</span></div></div></div></div><small class="text-muted mt-3 d-block">Tipy ostatních hráčů:</small><div class="mt-2">`;
-            Object.keys(allUsers).filter(u => u !== currentPlayer).forEach(username => {
-                const tip = allTips[username]?.[match.id] ?? '?', bet = allBets[username]?.[match.id] ?? '0', evaluation = allEvals[username]?.[match.id] ?? 'nevyhodnoceno';
-                html += `<div class="other-player-tip-card">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">${generateAvatar(username)}<span class="ms-2 fw-bold">${username}</span></div>
-                                <span class="evaluation-status-display status-${evaluation}">${evaluation.toUpperCase()}</span>
-                            </div>
-                            <hr class="my-2">
-                            <div class="d-flex justify-content-between">
-                                <div class="text-center">
-                                    <small class="text-muted">Tip</small>
-                                    <p class="fw-bold mb-0">${tip}</p>
+            html += `<div class="card mb-3"><div class="card-body"><div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><h5 class="mb-0"><i class="fas fa-futbol me-2"></i>${match.name}</h5><div class="d-flex align-items-center gap-2">${isEvaluated ? `<span class="badge bg-primary-subtle text-primary-emphasis rounded-pill p-2">Výsledek: ${officialResult}</span>` : ''}<button class="btn btn-sm btn-outline-primary" onclick="openPerplexityAnalysis('${match.name}')"><i class="fas fa-search me-1"></i>Analýza</button></div></div><div class="p-3 rounded my-tip-row"><div class="row align-items-center gx-3"><div class="col-12 col-md-5 mb-2 mb-md-0"><div class="btn-group w-100 tip-btn-group" role="group"><button type="button" class="btn ${myTip === 1 ? 'active' : ''}" onclick="saveTip('${match.id}', 1)" ${isEvaluated ? 'disabled' : ''}>1</button><button type="button" class="btn ${myTip === 0 ? 'active' : ''}" onclick="saveTip('${match.id}', 0)" ${isEvaluated ? 'disabled' : ''}>0</button><button type="button" class="btn ${myTip === 2 ? 'active' : ''}" onclick="saveTip('${match.id}', 2)" ${isEvaluated ? 'disabled' : ''}>2</button></div></div><div class="col-12 col-md-7"><div class="input-group"><input type="number" class="form-control" placeholder="Sázka" min="0" max="1000" step="10" value="${myBet}" onchange="saveBet('${match.id}', this.value)" ${isEvaluated ? 'disabled' : ''}><span class="input-group-text">Kč</span></div></div></div></div><small class="text-muted mt-3 d-block">Tipy ostatních hráčů:</small><div class="mt-2">`;
+            const otherUsers = Object.keys(allUsers).filter(u => u !== currentPlayer);
+            if(otherUsers.length > 0) {
+                otherUsers.forEach(username => {
+                    const tip = allTips[username]?.[match.id] ?? '?', bet = allBets[username]?.[match.id] ?? '0', evaluation = allEvals[username]?.[match.id] ?? 'nevyhodnoceno';
+                    html += `<div class="other-player-tip-card">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">${generateAvatar(username)}<span class="ms-2 fw-bold">${username}</span></div>
+                                    <span class="evaluation-status-display status-${evaluation}">${evaluation.toUpperCase()}</span>
                                 </div>
-                                <div class="text-center">
-                                    <small class="text-muted">Sázka</small>
-                                    <p class="fw-bold mb-0">${bet} Kč</p>
+                                <hr class="my-2">
+                                <div class="d-flex justify-content-between">
+                                    <div class="text-center">
+                                        <small class="text-muted">Tip</small>
+                                        <p class="fw-bold mb-0">${tip}</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <small class="text-muted">Sázka</small>
+                                        <p class="fw-bold mb-0">${bet} Kč</p>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>`;
-            });
+                            </div>`;
+                });
+            } else {
+                html += `<p class="text-muted small text-center mt-2">Zatím žádné další tipy.</p>`;
+            }
             html += `</div></div></div>`;
         });
         html += `</div></div></div>`;
@@ -376,7 +425,6 @@ function saveBet(matchId, bet) {
     betRef.set(value)
         .then(() => {
             showToast('Sázka uložena!', 'success');
-            // Recalculate total bet atomically
             return database.ref(`bets/${currentPlayer}`).once('value');
         })
         .then(snapshot => {
@@ -427,7 +475,6 @@ async function adminEvaluateMatch(matchId, result) {
                 updates[`/evaluations/${username}/${matchId}`] = isCorrect ? 'ok' : 'spatne';
                 if (isCorrect) {
                     const pointsRef = database.ref(`points/${username}`);
-                    // Use a transaction for safely incrementing points
                     return pointsRef.transaction(currentPoints => (currentPoints || 0) + 3);
                 }
             }
@@ -499,21 +546,77 @@ function toggleButtonState(btn, isLoading, loadingText = 'Načítání...') {
     }
 }
 
-function getCompetitionProgress() {
-    const start = new Date(COMPETITION_START);
-    const end = new Date(COMPETITION_END);
-    const today = new Date();
-    
-    const totalDuration = end - start;
-    const elapsedDuration = today - start;
-    
-    let percentage = (elapsedDuration / totalDuration) * 100;
-    percentage = Math.max(0, Math.min(100, percentage));
-    
-    const daysRemaining = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
-    
-    return { percentage, daysRemaining: Math.max(0, daysRemaining) };
+function getMonthProgress() {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const totalDays = endOfMonth.getDate();
+    const passedDays = now.getDate();
+    const progressPercentage = Math.round((passedDays / totalDays) * 100);
+    const monthName = now.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' });
+    return { monthName, progressPercentage };
 }
+
+function getHotTip(data) {
+    const allTips = data.tips || {};
+    const matchResults = data.matchResults || {};
+    const unevaluatedMatchTips = {};
+
+    for (const user in allTips) {
+        for (const matchId in allTips[user]) {
+            if (!matchResults.hasOwnProperty(matchId)) {
+                if (!unevaluatedMatchTips[matchId]) {
+                    unevaluatedMatchTips[matchId] = 0;
+                }
+                unevaluatedMatchTips[matchId]++;
+            }
+        }
+    }
+
+    if (Object.keys(unevaluatedMatchTips).length === 0) {
+        return { name: "Čeká se na nové zápasy", count: 0 };
+    }
+
+    const hotTipMatchId = Object.keys(unevaluatedMatchTips).reduce((a, b) => unevaluatedMatchTips[a] > unevaluatedMatchTips[b] ? a : b);
+    
+    let hotTipMatchName = "Neznámý zápas";
+    if(allMatches) {
+        for (const round of allMatches) {
+            const foundMatch = round.matches.find(m => m.id === hotTipMatchId);
+            if (foundMatch) {
+                hotTipMatchName = foundMatch.name;
+                break;
+            }
+        }
+    }
+
+    return { name: hotTipMatchName, count: unevaluatedMatchTips[hotTipMatchId] };
+}
+
+function calculatePlayerForm(username, evaluations, allMatches) {
+    const userEvals = evaluations?.[username] || {};
+    if (Object.keys(userEvals).length < 3 || !allMatches) return 0;
+
+    const allMatchIds = allMatches.flatMap(round => round.matches.map(match => match.id));
+    
+    const sortedUserEvals = allMatchIds
+        .filter(matchId => userEvals[matchId] !== undefined)
+        .map(matchId => ({ id: matchId, result: userEvals[matchId] }));
+
+    if (sortedUserEvals.length < 3) return 0;
+
+    let streak = 0;
+    for (let i = sortedUserEvals.length - 1; i >= 0; i--) {
+        if (sortedUserEvals[i].result === 'ok') {
+            streak++;
+        } else {
+            break;
+        }
+    }
+    
+    return streak;
+}
+
 
 function openPerplexityAnalysis(matchName) {
     const prompt = `Poskytni stručnou analýzu pro fotbalový zápas: ${matchName}`;
