@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚽ Fotbalové Tipy | Vítězná Aplikace</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>⚽ Fotbalové Tipy | Soutěž</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         :root {
@@ -22,7 +22,7 @@
             --danger-color: #dc3545;
             --warning-color: #ffc107;
             --border-radius: 16px;
-            --shadow: 0 4px_25px rgba(0, 0, 0, 0.06);
+            --shadow: 0 4px 25px rgba(0, 0, 0, 0.06);
             --sidebar-width: 260px;
             --mobile-nav-height: 70px;
         }
@@ -108,7 +108,9 @@
         /* --- Matches Page --- */
         .accordion-button { font-family: 'Oswald'; font-size: 1.2rem; }
         .accordion-button:not(.collapsed) { background-color: rgba(13, 110, 253, 0.05); color: var(--accent-color); box-shadow: none; }
-        .accordion-item { border-radius: var(--border-radius); border: 1px solid var(--border-color); }
+        .accordion-item { border-radius: var(--border-radius) !important; border: 1px solid var(--border-color); }
+        .accordion-item:first-of-type, .accordion-item:last-of-type { border-radius: var(--border-radius) !important; }
+
         .tip-btn-group .btn { border: 1px solid var(--border-color); background: #fff; color: var(--text-color); }
         .tip-btn-group .btn.active { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
         .my-tip-row { background: rgba(13, 110, 253, 0.05); border: 1px solid rgba(13, 110, 253, 0.2); }
@@ -117,6 +119,12 @@
         .status-ok { background-color: rgba(25, 135, 84, 0.1); color: var(--success-color); }
         .status-spatne { background-color: rgba(220, 53, 69, 0.1); color: var(--danger-color); }
         .status-nevyhodnoceno { background-color: #f0f0f0; color: var(--muted-text-color); }
+        
+        /* --- Modal & QR --- */
+        .modal-content { border-radius: var(--border-radius); border: none; }
+        .intro-step { display: flex; align-items: flex-start; margin-bottom: 1.5rem; }
+        .intro-step .icon { font-size: 1.5rem; color: var(--accent-color); margin-right: 1rem; width: 30px; text-align: center; }
+        #qr-canvas { border: 5px solid var(--bg-color); border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -130,7 +138,8 @@
             <div class="mb-3"><input type="text" class="form-control" id="username" placeholder="Uživatelské jméno"></div>
             <div class="mb-4"><input type="password" class="form-control" id="pin" placeholder="PIN (4 číslice)" maxlength="4" inputmode="numeric"></div>
             <button class="btn btn-primary w-100 mb-2" onclick="login()">Přihlásit se <i class="fas fa-key"></i></button>
-            <button class="btn btn-outline-secondary w-100" onclick="register()">Registrovat se <i class="fas fa-user-plus"></i></button>
+            <button class="btn btn-outline-secondary w-100 mb-3" onclick="register()">Registrovat se <i class="fas fa-user-plus"></i></button>
+            <a href="#" class="link-secondary small" data-bs-toggle="modal" data-bs-target="#introModal">Jak to funguje?</a>
         </div>
     </div>
 
@@ -172,25 +181,64 @@
     </div>
 
     <!-- Modals & Toasts -->
+    <div class="modal fade" id="introModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header border-0"><h3 class="modal-title">Vítejte ve Fotbalových Tipech!</h3><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="intro-step"><div class="icon"><i class="fas fa-bullseye"></i></div><div><h5>1. Tipujte a sbírejte body</h5><p class="text-muted">Za každý správně tipnutý výsledek zápasu (1 - výhra domácích, 0 - remíza, 2 - výhra hostů) získáte 3 body. Cílem je nasbírat co nejvíce bodů.</p></div></div><div class="intro-step"><div class="icon"><i class="fas fa-coins"></i></div><div><h5>2. Vsaďte si a tvořte bank</h5><p class="text-muted">Ke každému tipu můžete přidat libovolnou sázku v Kč. Všechny sázky od všech hráčů se sčítají a tvoří celkový "bank", o který se hraje.</p></div></div><div class="intro-step"><div class="icon"><i class="fas fa-trophy"></i></div><div><h5>3. Staňte se vítězem</h5><p class="text-muted mb-0">Hráč s nejvyšším počtem bodů na konci soutěže vyhrává celý bank. Pokud má více hráčů stejný počet bodů, bank se mezi ně dělí rovným dílem.</p></div></div></div></div></div>
+    </div>
     <div class="modal fade" id="resetConfirmModal" tabindex="-1">
          <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header border-0"><h5 class="modal-title">Opravdu resetovat soutěž?</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>Tato akce je nevratná. Všechny body, sázky a vyhodnocení budou trvale smazány.</p></div><div class="modal-footer border-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušit</button><button type="button" class="btn btn-danger" id="confirmResetBtn">Ano, resetovat</button></div></div></div>
     </div>
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script>
         // --- CONFIG & GLOBAL STATE ---
-        const firebaseConfig = {/* ... Vaše konfigurace ... */};
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-gLlgyPKNf4z1cfl1Z1N1qu79FvO_3A8",
+            authDomain: "ftbapp-ded2c.firebaseapp.com",
+            databaseURL: "https://ftbapp-ded2c-default-rtdb.europe-west1.firebasedatabase.app/",
+            projectId: "ftbapp-ded2c",
+            storageBucket: "ftbapp-ded2c.appspot.com",
+            messagingSenderId: "239337886217",
+            appId: "1:239337886217:web:9b67dffaba23d6e86dded8"
+        };
         const ADMIN_USERNAME = 'kuba';
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        let currentPlayer = null, allUsers = {}, allMatches = [], resetModal;
+        let currentPlayer = null, allUsers = {}, allMatches = [], resetModal, introModal;
 
         // --- AUTH & INIT ---
-        const register = () => { /* ... No change ... */ };
-        const login = () => { /* ... No change ... */ };
+        const register = () => {
+            const username = document.getElementById('username').value.trim().toLowerCase();
+            const pin = document.getElementById('pin').value.trim();
+            if (username.length < 3) return showToast('Jméno musí mít alespoň 3 znaky!', 'danger');
+            if (!/^\d{4}$/.test(pin)) return showToast('PIN musí být 4 číslice!', 'danger');
+            
+            database.ref(`users/${username}`).once('value', snapshot => {
+                if (snapshot.exists()) return showToast('Uživatel s tímto jménem již existuje!', 'danger');
+                
+                database.ref(`users/${username}`).set({ pin, registeredAt: new Date().toISOString() });
+                sessionStorage.setItem('currentPlayer', username);
+                showToast(`Registrace úspěšná, vítej ${username}! 🎉`, 'success');
+                initApp();
+            }).catch(handleFirebaseError);
+        };
+
+        const login = () => {
+            const username = document.getElementById('username').value.trim().toLowerCase();
+            const pin = document.getElementById('pin').value.trim();
+            if (!username || !pin) return showToast('Zadejte jméno a PIN.', 'warning');
+
+            database.ref(`users/${username}/pin`).once('value', snapshot => {
+                if (snapshot.val() === pin) {
+                    sessionStorage.setItem('currentPlayer', username);
+                    initApp();
+                } else {
+                    showToast('Špatné jméno nebo PIN!', 'danger');
+                }
+            }).catch(handleFirebaseError);
+        };
         const logout = () => { sessionStorage.removeItem('currentPlayer'); location.reload(); };
 
         const initApp = async () => {
@@ -198,9 +246,10 @@
             if (!currentPlayer) {
                 document.getElementById('loading-screen').classList.add('d-none');
                 document.getElementById('login-page').classList.remove('d-none');
+                introModal = new bootstrap.Modal(document.getElementById('introModal'));
                 return;
             }
-
+            
             document.getElementById('logged-in-user').textContent = currentPlayer;
             if (currentPlayer === ADMIN_USERNAME) document.getElementById('admin-nav-item').classList.remove('d-none');
             
@@ -219,21 +268,61 @@
         };
         
         const setupFirebaseListeners = () => {
-            const dbRef = database.ref();
-            dbRef.on('value', snapshot => {
+            database.ref().on('value', snapshot => {
                 const data = snapshot.val() || {};
                 allUsers = data.users || {};
                 renderAllSections(data);
             }, handleFirebaseError);
         };
         
-        const loadMatchesFromFile = async () => { /* ... No change ... */ };
+        const loadMatchesFromFile = async () => {
+            const response = await fetch('matches.txt');
+            if (!response.ok) {
+                if(response.status === 404) throw new Error('Soubor `matches.txt` nebyl nalezen. Ujistěte se, že existuje ve stejné složce jako `index.html`.');
+                throw new Error(`Chyba při načítání souboru zápasů (HTTP status: ${response.status}).`);
+            }
+            const text = await response.text();
+            if (!text.trim()) throw new Error('Soubor `matches.txt` je prázdný.');
+
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            let currentRound = 'Neznámé kolo';
+            const rounds = [];
+            let roundIndex = -1;
+
+            lines.forEach(line => {
+                const isRoundTitle = !line.toLowerCase().includes('vs.');
+                if (isRoundTitle) {
+                    currentRound = line.trim();
+                    rounds.push({ round: currentRound, matches: [] });
+                    roundIndex++;
+                } else {
+                    if (roundIndex === -1) {
+                        rounds.push({ round: currentRound, matches: [] });
+                        roundIndex = 0;
+                    }
+                    const matchIndex = rounds[roundIndex].matches.length;
+                    rounds[roundIndex].matches.push({ id: `r${roundIndex}m${matchIndex}`, name: line.trim() });
+                }
+            });
+            return rounds;
+        };
 
         // --- RENDER FUNCTIONS ---
         const renderAllSections = (data) => {
-            const section = document.querySelector('.app-section:not(.d-none)').id.replace('-section', '');
-            renderDashboard(data); renderLeaderboard(data); renderMatches(data); renderProfile(data);
-            if(currentPlayer === ADMIN_USERNAME) renderAdminPanel(data);
+            const activeSection = document.querySelector('.app-section:not(.d-none)');
+            if (!activeSection) return;
+            const sectionId = activeSection.id.replace('-section', '');
+            
+            const renderMap = {
+                'dashboard': renderDashboard, 'matches': renderMatches,
+                'leaderboard': renderLeaderboard, 'profile': renderProfile,
+                'admin': renderAdminPanel,
+            };
+
+            if (renderMap[sectionId]) {
+                renderMap[sectionId](data);
+                if (sectionId === 'admin' && currentPlayer !== ADMIN_USERNAME) showSection('dashboard');
+            }
         };
 
         const renderDashboard = (data) => {
@@ -260,8 +349,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card p-4"><div class="card-body text-center"><i class="fa-solid fa-trophy fa-2x text-warning mb-3"></i><h3>Vítejte v soutěži!</h3><p class="text-muted">Sledujte zápasy, tipujte a dostaňte se na vrchol žebříčku.</p></div></div>
-            `;
+                <div class="card"><div class="card-body text-center p-5"><i class="fa-solid fa-trophy fa-2x text-warning mb-3"></i><h3>Vítejte v soutěži!</h3><p class="text-muted">Sledujte zápasy, tipujte a dostaňte se na vrchol žebříčku.</p></div></div>`;
         };
 
         const renderLeaderboard = (data) => {
@@ -304,15 +392,11 @@
                 html += `
                     <div class="accordion-item mb-3">
                         <h2 class="accordion-header"><button class="accordion-button ${roundIndex === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${roundIndex}">${round.round}</button></h2>
-                        <div id="collapse${roundIndex}" class="accordion-collapse collapse ${roundIndex === 0 ? 'show' : ''}" data-bs-parent="#roundsAccordion">
-                            <div class="accordion-body">`;
+                        <div id="collapse${roundIndex}" class="accordion-collapse collapse ${roundIndex === 0 ? 'show' : ''}" data-bs-parent="#roundsAccordion"><div class="accordion-body">`;
                 round.matches.forEach(match => {
                     const officialResult = matchResults[match.id], isEvaluated = officialResult !== undefined;
                     const myTip = allTips[currentPlayer]?.[match.id], myBet = allBets[currentPlayer]?.[match.id] ?? '';
-
-                    // My Tip Row
-                    html += `
-                        <div class="card mb-3"><div class="card-body">
+                    html += `<div class="card mb-3"><div class="card-body">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                                 <h5 class="mb-0"><i class="fas fa-futbol me-2"></i>${match.name}</h5>
                                 ${isEvaluated ? `<span class="badge bg-primary-subtle text-primary-emphasis rounded-pill p-2">Výsledek: ${officialResult}</span>` : ''}
@@ -336,18 +420,13 @@
                             </div>
                             <small class="text-muted mt-3 d-block">Tipy ostatních hráčů:</small>`;
                     
-                    // Other Players' Tips
                     Object.keys(allUsers).filter(u => u !== currentPlayer).forEach(username => {
                         const tip = allTips[username]?.[match.id] ?? '-', bet = allBets[username]?.[match.id] ?? '0', evaluation = allEvals[username]?.[match.id] ?? 'nevyhodnoceno';
-                        html += `
-                            <div class="d-flex justify-content-between align-items-center p-2 mt-2 rounded other-tip-row">
+                        html += `<div class="d-flex justify-content-between align-items-center p-2 mt-2 rounded other-tip-row">
                                 <span><i class="fas fa-user me-2 opacity-50"></i>${username}</span>
                                 <div class="d-flex align-items-center gap-3">
-                                    <span class="fw-bold">Tip: ${tip}</span>
-                                    <span>${bet} Kč</span>
-                                    <span class="evaluation-status-display status-${evaluation}">${evaluation.toUpperCase()}</span>
-                                </div>
-                            </div>`;
+                                    <span class="fw-bold">Tip: ${tip}</span><span>${bet} Kč</span><span class="evaluation-status-display status-${evaluation}">${evaluation.toUpperCase()}</span>
+                                </div></div>`;
                     });
                     html += `</div></div>`;
                 });
@@ -357,90 +436,106 @@
             document.getElementById('matches-section').innerHTML = html;
         };
         
-        const renderProfile = (data) => { /* ... No change ... */ };
-        const renderAdminPanel = (data) => { /* ... No change ... */ };
+        const renderProfile = (data) => {
+            const account = data.profiles?.[currentPlayer]?.account || '';
+            const points = data.points || {}, totalBets = data.totalBets || {};
+            let isWinner = false, winnings = 0;
 
+            if (Object.keys(points).length > 0) {
+                 let maxPoints = Math.max(...Object.values(points));
+                 if (maxPoints > 0 && points[currentPlayer] === maxPoints) {
+                     const winners = Object.keys(points).filter(u => points[u] === maxPoints);
+                     const totalPool = Object.values(totalBets).reduce((sum, bet) => sum + bet, 0);
+                     winnings = winners.length > 0 ? totalPool / winners.length : 0;
+                     isWinner = winnings > 0;
+                 }
+            }
+
+            document.getElementById('profile-section').innerHTML = `<h2 class="mb-4">Můj profil</h2><div class="row"><div class="col-lg-6"><div class="card"><div class="card-body p-4"><h3><i class="fas fa-address-card me-2"></i>Osobní údaje</h3><div class="mb-3"><label for="my-account" class="form-label">Číslo účtu (pro výhry):</label><input type="text" class="form-control" id="my-account" value="${account}" placeholder="123456-7890123456" maxlength="24"></div><div class="mb-3"><label for="my-pin" class="form-label">Změna PIN (nový 4-místný PIN):</label><input type="password" class="form-control" id="my-pin" placeholder="••••" maxlength="4"></div><button class="btn btn-primary" onclick="saveProfile()"><i class="fas fa-save me-1"></i>Uložit profil</button></div></div></div><div class="col-lg-6"><div class="card"><div class="card-body p-4"><h3><i class="fas fa-money-check-alt me-2"></i>Platby</h3><p class="text-muted">Zde můžete spravovat své platby.</p><button class="btn btn-success w-100 mb-2" onclick="generateDepositQR()"><i class="fas fa-arrow-down me-2"></i>Zaplatit sázky (QR)</button><button class="btn btn-warning w-100" onclick="generateWithdrawalQR()" ${!isWinner ? 'disabled' : ''}><i class="fas fa-arrow-up me-2"></i>Vybrat výhru ${isWinner ? `(${winnings.toLocaleString('cs-CZ')} Kč)` : ''} (QR)</button>${!isWinner ? '<small class="d-block text-center mt-2 text-muted">Tlačítko pro výběr výhry se aktivuje, jakmile se stanete vítězem.</small>' : ''}<div id="qr-container" class="text-center mt-3 d-none"><h5 id="qr-title"></h5><canvas id="qr-canvas"></canvas><p class="mt-2 text-muted small" id="qr-details"></p></div></div></div></div></div>`;
+        };
+        
+        const renderAdminPanel = (data) => {
+            const matchResults = data.matchResults || {};
+            let unevaluatedMatchesHTML = '';
+            allMatches.forEach(round => {
+                round.matches.forEach(match => {
+                    if (matchResults[match.id] === undefined) {
+                        unevaluatedMatchesHTML += `<div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded flex-wrap"><span class="me-3">${match.name}</span><div class="btn-group"><button class="btn btn-sm btn-success" onclick="adminEvaluateMatch('${match.id}', 1)">1</button><button class="btn btn-sm btn-warning text-dark" onclick="adminEvaluateMatch('${match.id}', 0)">0</button><button class="btn btn-sm btn-danger" onclick="adminEvaluateMatch('${match.id}', 2)">2</button></div></div>`;
+                    }
+                });
+            });
+            if (unevaluatedMatchesHTML === '') unevaluatedMatchesHTML = '<p class="text-muted">Všechny zápasy jsou vyhodnoceny.</p>';
+            
+            document.getElementById('admin-section').innerHTML = `<div class="admin-controls card p-4"><h2 class="mb-4"><i class="fas fa-cogs me-2"></i>Administrace</h2><div class="card mb-4"><div class="card-body p-4"><h3><i class="fas fa-check-double me-2"></i>Vyhodnocení zápasů</h3>${unevaluatedMatchesHTML}</div></div><div class="card"><div class="card-body p-4"><h3><i class="fas fa-redo-alt me-2"></i>Měsíční Reset</h3><p class="text-muted">Resetuje body, sázky a vyhodnocení. Tuto akci nelze vrátit!</p><button class="btn btn-danger" onclick="showResetModal()"><i class="fas fa-exclamation-triangle me-1"></i>Resetovat Soutěž</button></div></div></div>`;
+        };
+        
         // --- ACTIONS ---
         const saveTip = (matchId, tip) => database.ref(`tips/${currentPlayer}/${matchId}`).set(tip).then(() => showToast('Tip uložen!', 'success')).catch(handleFirebaseError);
-        const saveBet = (matchId, bet) => { /* ... No change ... */ };
-        const updateTotalBet = (username) => { /* ... No change ... */ };
-        const saveProfile = () => { /* ... No change ... */ };
-        
-        const generateQR = async () => {
-            const myTotalBetSnap = await database.ref(`totalBets/${currentPlayer}`).once('value');
-            const totalBet = myTotalBetSnap.val() || 0;
-
-            if (totalBet <= 0) return showToast('Nemáte žádnou sázku pro vygenerování QR platby.', 'info');
-            
-            const accountSnap = await database.ref(`profiles/${currentPlayer}/account`).once('value');
-            const account = accountSnap.val();
-            if (!account) return showToast('Nejprve zadejte číslo účtu v profilu!', 'danger');
-
-            const qrContainer = document.getElementById('qr-container'), canvas = document.getElementById('qr-canvas');
-            const paymentDetails = `SPD*1.0*ACC:${account.replace('-', '')}*AM:${totalBet.toFixed(2)}*CC:CZK*MSG:Vklad FTB Tipy ${currentPlayer}`;
-
-            QRCode.toCanvas(canvas, paymentDetails, { width: 200, margin: 1 }, error => {
-                if (error) return handleFirebaseError(error);
-                document.getElementById('qr-details').textContent = `Žádost o platbu ${totalBet.toFixed(2)} Kč na účet ${account}`;
-                qrContainer.classList.remove('d-none');
-                showToast('QR kód pro platbu sázky úspěšně vygenerován!', 'success');
-            });
+        const saveBet = (matchId, bet) => {
+            const value = bet === "" ? null : parseInt(bet);
+            if (value !== null && (isNaN(value) || value < 0 || value > 1000)) return showToast('Sázka musí být mezi 0 a 1000 Kč!', 'danger');
+            database.ref(`bets/${currentPlayer}/${matchId}`).set(value)
+                .then(() => { showToast('Sázka uložena!', 'success'); updateTotalBet(currentPlayer); })
+                .catch(handleFirebaseError);
         };
-        
-        const showResetModal = () => resetModal.show();
-        const confirmReset = () => { /* ... No change ... */ };
-        document.getElementById('confirmResetBtn').addEventListener('click', confirmReset);
-
-        const adminEvaluateMatch = async (matchId, result) => { /* ... No change ... */ };
-        
-        // --- UTILITIES ---
-        const setupNavigation = () => { /* ... Updated for new nav ... */ };
-        const showSection = (sectionId) => { /* ... Updated for new nav ... */ };
-        const generateAvatar = (username) => {
-            const colors = ['#0d6efd', '#6f42c1', '#d63384', '#dc3545', '#fd7e14', '#198754', '#20c997', '#0dcaf0'];
-            const initial = username.charAt(0).toUpperCase();
-            const charCodeSum = username.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-            const color = colors[charCodeSum % colors.length];
-            return `<div class="leaderboard-avatar" style="background-color: ${color}">${initial}</div>`;
-        };
-        const showToast = (message, type = 'info') => { /* ... No change ... */ };
-        const handleFirebaseError = (error) => { /* ... No change ... */ };
-        
-        // --- ON PAGE LOAD ---
-        window.onload = () => initApp();
-
-        // --- Re-implementing functions from previous version to avoid missing definitions ---
-        // (This section ensures all onclicks and utility functions are properly defined)
-        login; register; logout; saveTip; saveBet; saveProfile; generateQR; adminEvaluateMatch; showResetModal;
-        
-        const oldLoadMatches = async () => {
-            const response = await fetch('matches.txt');
-            if (!response.ok) {
-                if(response.status === 404) throw new Error('Soubor `matches.txt` nebyl nalezen.');
-                throw new Error(`Chyba při načítání souboru zápasů (HTTP status: ${response.status}).`);
-            }
-            const text = await response.text(); if (!text.trim()) throw new Error('Soubor `matches.txt` je prázdný.');
-            const lines = text.split('\n').filter(line => line.trim() !== ''); let currentRound = 'Neznámé kolo';
-            const rounds = []; let roundIndex = -1;
-            lines.forEach(line => {
-                const isRoundTitle = !line.toLowerCase().includes('vs.');
-                if (isRoundTitle) {
-                    currentRound = line.trim(); rounds.push({ round: currentRound, matches: [] }); roundIndex++;
-                } else {
-                    if (roundIndex === -1) { rounds.push({ round: currentRound, matches: [] }); roundIndex = 0; }
-                    const matchIndex = rounds[roundIndex].matches.length;
-                    rounds[roundIndex].matches.push({ id: `r${roundIndex}m${matchIndex}`, name: line.trim() });
-                }
-            }); return rounds;
-        };
-        loadMatchesFromFile = oldLoadMatches;
-        updateTotalBet = (username) => {
+        const updateTotalBet = (username) => {
             database.ref(`bets/${username}`).once('value', snapshot => {
                 const totalBet = Object.values(snapshot.val() || {}).reduce((sum, b) => sum + (parseInt(b) || 0), 0);
                 database.ref(`totalBets/${username}`).set(totalBet);
             }).catch(handleFirebaseError);
         };
-        const oldConfirmReset = () => {
+        const saveProfile = () => {
+            const account = document.getElementById('my-account').value.trim();
+            const pin = document.getElementById('my-pin').value.trim();
+            if (account && !/^\d{1,6}-\d{1,10}$/.test(account)) return showToast('Číslo účtu má neplatný formát!', 'danger');
+            if (pin && !/^\d{4}$/.test(pin)) return showToast('PIN musí být 4 číslice!', 'danger');
+            const updates = {};
+            if (account) updates[`/profiles/${currentPlayer}/account`] = account;
+            if (pin) updates[`/users/${currentPlayer}/pin`] = pin;
+            if (Object.keys(updates).length > 0) {
+                database.ref().update(updates).then(() => {
+                    showToast('Profil uložen!', 'success');
+                    if (pin) document.getElementById('my-pin').value = '';
+                }).catch(handleFirebaseError);
+            } else showToast('Nebyly provedeny žádné změny.', 'info');
+        };
+        
+        const generateDepositQR = async () => {
+            const myTotalBetSnap = await database.ref(`totalBets/${currentPlayer}`).once('value');
+            const totalBet = myTotalBetSnap.val() || 0;
+            if (totalBet <= 0) return showToast('Nemáte žádnou sázku pro zaplacení.', 'info');
+            showQrCode(`Vklad sázek (${currentPlayer})`, `Vklad ${totalBet.toFixed(2)} Kč`, `Vklad FTB Tipy ${currentPlayer}`, totalBet);
+        };
+        const generateWithdrawalQR = async () => {
+             const pointsSnap = await database.ref('points').once('value'), totalBetsSnap = await database.ref('totalBets').once('value');
+             const points = pointsSnap.val() || {}, totalBets = totalBetsSnap.val() || {};
+             let maxPoints = Math.max(...Object.values(points).concat([0]));
+             if (maxPoints <= 0 || points[currentPlayer] !== maxPoints) return showToast('Pro výběr musíte být vítěz s kladným skóre.', 'danger');
+             const winners = Object.keys(points).filter(user => points[user] === maxPoints);
+             const totalPool = Object.values(totalBets).reduce((sum, bet) => sum + bet, 0);
+             const winnings = winners.length > 0 ? totalPool / winners.length : 0;
+             if (winnings <= 0) return showToast('Výhra je 0 Kč, nelze vybrat.', 'info');
+             showQrCode('Výběr výhry', `Výhra ${winnings.toFixed(2)} Kč`, `Vyhra FTB Tipy ${currentPlayer}`, winnings, true);
+        };
+        const showQrCode = async (title, details, msg, amount, isWithdrawal = false) => {
+             const targetUser = isWithdrawal ? currentPlayer : ADMIN_USERNAME;
+             const accountSnap = await database.ref(`profiles/${targetUser}/account`).once('value');
+             const account = accountSnap.val();
+             if (!account) return showToast(`Účet ${isWithdrawal ? 'pro výhru' : 'administrátora'} není nastaven!`, 'danger');
+             
+             const qrContainer = document.getElementById('qr-container'), canvas = document.getElementById('qr-canvas');
+             const paymentDetails = `SPD*1.0*ACC:${account.replace('-', '')}*AM:${amount.toFixed(2)}*CC:CZK*MSG:${msg}`;
+             document.getElementById('qr-title').textContent = title;
+             QRCode.toCanvas(canvas, paymentDetails, { width: 200, margin: 1 }, error => {
+                 if (error) return handleFirebaseError(error);
+                 document.getElementById('qr-details').textContent = `${details} na účet ${account}`;
+                 qrContainer.classList.remove('d-none');
+                 showToast('QR kód úspěšně vygenerován!', 'success');
+             });
+        };
+
+        const showResetModal = () => resetModal.show();
+        const confirmReset = () => {
             const pathsToRemove = ['points', 'totalBets', 'bets', 'tips', 'evaluations', 'matchResults'];
             const updates = {};
             pathsToRemove.forEach(path => updates[path] = null);
@@ -448,12 +543,12 @@
                 .then(() => { resetModal.hide(); showToast('Soutěž byla úspěšně resetována!', 'success'); })
                 .catch(handleFirebaseError);
         };
-        confirmReset = oldConfirmReset;
         document.getElementById('confirmResetBtn').addEventListener('click', confirmReset);
 
-        const oldAdminEvaluate = async (matchId, result) => {
+        const adminEvaluateMatch = async (matchId, result) => {
             await database.ref(`matchResults/${matchId}`).set(result);
-            const tipsSnapshot = await database.ref('tips').once('value'); const allTips = tipsSnapshot.val() || {};
+            const tipsSnapshot = await database.ref('tips').once('value');
+            const allTips = tipsSnapshot.val() || {};
             const updates = {};
             const pointPromises = Object.keys(allUsers).map(username => {
                 const userTip = allTips[username]?.[matchId];
@@ -461,38 +556,51 @@
                     if (parseInt(userTip) === result) {
                         updates[`/evaluations/${username}/${matchId}`] = 'ok';
                         return database.ref(`points/${username}`).transaction(points => (points || 0) + 3);
-                    } else { updates[`/evaluations/${username}/${matchId}`] = 'spatne'; }
+                    } else updates[`/evaluations/${username}/${matchId}`] = 'spatne';
                 } return Promise.resolve();
             });
-            await database.ref().update(updates); await Promise.all(pointPromises);
+            await database.ref().update(updates);
+            await Promise.all(pointPromises);
             showToast('Zápas úspěšně vyhodnocen a body připsány!', 'success');
         };
-        adminEvaluateMatch = oldAdminEvaluate;
         
-        const oldSetupNav = () => {
+        // --- UTILITIES ---
+        const setupNavigation = () => {
             const navLinks = document.querySelectorAll('.sidebar-nav a, .mobile-nav a');
             navLinks.forEach(link => link.addEventListener('click', e => {
-                e.preventDefault(); const section = e.currentTarget.dataset.section; showSection(section);
+                e.preventDefault();
+                const section = e.currentTarget.dataset.section;
+                showSection(section);
                 navLinks.forEach(l => l.classList.remove('active'));
                 document.querySelectorAll(`a[data-section="${section}"]`).forEach(l => l.classList.add('active'));
             }));
         };
-        setupNavigation = oldSetupNav;
-        const oldShowSection = (sectionId) => {
+        const showSection = (sectionId) => {
             document.querySelectorAll('.app-section').forEach(s => s.classList.add('d-none'));
             const sectionEl = document.getElementById(`${sectionId}-section`);
             sectionEl.classList.remove('d-none');
         };
-        showSection = oldShowSection;
-        const oldShowToast = (message, type = 'info') => {
-            const toastContainer = document.querySelector('.toast-container'); const toastId = `toast-${Date.now()}`;
-            const toastHTML = `<div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true"><div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>`;
-            toastContainer.insertAdjacentHTML('beforeend', toastHTML); const toastEl = document.getElementById(toastId);
-            const toast = new bootstrap.Toast(toastEl); toast.show(); toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+        const generateAvatar = (username) => {
+            const colors = ['#0d6efd', '#6f42c1', '#d63384', '#dc3545', '#fd7e14', '#198754', '#20c997', '#0dcaf0'];
+            const initial = username.charAt(0).toUpperCase();
+            const charCodeSum = username.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+            const color = colors[charCodeSum % colors.length];
+            return `<div class="leaderboard-avatar" style="background-color: ${color}">${initial}</div>`;
         };
-        showToast = oldShowToast;
-        const oldHandleFirebaseError = (error) => { console.error("Firebase Error:", error); showToast(`Chyba databáze: ${error.message}`, 'danger'); };
-        handleFirebaseError = oldHandleFirebaseError;
+        const showToast = (message, type = 'info') => {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = `toast-${Date.now()}`;
+            const toastHTML = `<div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true"><div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>`;
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const toastEl = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+        };
+        const handleFirebaseError = (error) => { console.error("Firebase Error:", error); showToast(`Chyba databáze: ${error.message}`, 'danger'); };
+        
+        // --- ON PAGE LOAD ---
+        window.onload = () => initApp();
 
     </script>
 </body>
