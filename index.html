@@ -3,163 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚽ Fotbalové Tipy: Měsíční Soutěž</title>
+    <title>⚽ Fotbalové Tipy | Soutěž</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         :root {
-            --dark-bg-start: #0f0f23; --dark-bg-end: #1a1a2e;
-            --dark-text: #ffffff; --dark-card-bg: rgba(255, 255, 255, 0.08);
-            --dark-card-border: rgba(255, 255, 255, 0.15); --dark-input-bg: rgba(255, 255, 255, 0.15);
-            --dark-input-border: rgba(255, 255, 255, 0.3); --dark-header-color: #ffffff;
-
-            --light-bg-start: #f0f4f8; --light-bg-end: #d9e2ec;
-            --light-text: #333333; --light-card-bg: rgba(255, 255, 255, 0.95);
-            --light-card-border: rgba(0, 0, 0, 0.08); --light-input-bg: rgba(255, 255, 255, 0.9);
-            --light-input-border: rgba(0, 0, 0, 0.15); --light-header-color: #0f0f23;
-
-            --primary-gradient: linear-gradient(135deg, #667eea, #764ba2);
-            --success-gradient: linear-gradient(135deg, #43e97b, #38f9d7);
-            --danger-gradient: linear-gradient(135deg, #fa709a, #fee140);
-            --warning-gradient: linear-gradient(135deg, #4facfe, #00f2fe);
-            --info-gradient: linear-gradient(135deg, #00c6fb, #005bea);
+            --bg-color: #f4f7fc;
+            --card-bg-color: #ffffff;
+            --text-color: #333;
+            --heading-color: #1a253c;
+            --muted-text-color: #888;
+            --border-color: #e9ecef;
+            --accent-color: #007bff;
+            --accent-color-dark: #0056b3;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --border-radius: 16px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            --sidebar-width: 260px;
+            --mobile-nav-height: 70px;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            transition: background 0.3s ease, color 0.3s ease;
-            background: var(--dark-bg-start);
-            background-image: linear-gradient(135deg, var(--dark-bg-start) 0%, var(--dark-bg-end) 100%);
-            color: var(--dark-text);
-            min-height: 100vh;
-        }
-        body.light-mode {
-            background-image: linear-gradient(135deg, var(--light-bg-start) 0%, var(--light-bg-end) 100%);
-            color: var(--light-text);
-        }
-
-        h1, h2, h3, h4, h5 { font-family: 'Oswald', sans-serif; font-weight: 700; }
-        body.light-mode h1, body.light-mode h2, body.light-mode h3, body.light-mode h4, body.light-mode h5 { color: var(--light-header-color); }
-
-        .login-container {
-            min-height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
+        }
+
+        h1, h2, h3, h4, h5 { font-family: 'Oswald', sans-serif; font-weight: 700; color: var(--heading-color); }
+        .lead { color: var(--muted-text-color); }
+
+        /* --- Login Page --- */
+        .login-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            background-color: var(--bg-color); z-index: 2000;
         }
         .login-card {
-            background: var(--dark-card-bg); backdrop-filter: blur(10px);
-            padding: 40px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--dark-card-border); max-width: 450px; width: 100%;
-        }
-        body.light-mode .login-card {
-            background: var(--light-card-bg); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--light-card-border);
+            background: var(--card-bg-color); padding: 40px; border-radius: var(--border-radius);
+            box-shadow: var(--shadow); max-width: 450px; width: 100%;
         }
 
-        .navbar {
-            background: rgba(15, 15, 35, 0.8); backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        /* --- Main Layout & Navigation --- */
+        .sidebar {
+            width: var(--sidebar-width); height: 100vh;
+            background-color: var(--card-bg-color);
+            border-right: 1px solid var(--border-color);
+            position: fixed; top: 0; left: 0;
+            display: flex; flex-direction: column; padding: 2rem 1.5rem;
+            transition: transform 0.3s ease;
         }
-        body.light-mode .navbar {
-            background: rgba(255, 255, 255, 0.9); border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        .sidebar-header { margin-bottom: 2rem; }
+        .sidebar-nav a {
+            display: flex; align-items: center; padding: 0.9rem 1.2rem;
+            color: var(--muted-text-color); font-weight: 500;
+            text-decoration: none; border-radius: 12px; margin-bottom: 0.5rem;
+            transition: all 0.2s ease-in-out;
         }
-        .navbar-brand, .nav-link { color: #ffffff !important; }
-        body.light-mode .navbar-brand, body.light-mode .nav-link { color: #0f0f23 !important; }
-        .nav-link.active { font-weight: bold; border-bottom: 2px solid #4facfe; }
-        #admin-nav-item .nav-link { color: #f5576c !important; }
-        #admin-nav-item .nav-link.active { border-bottom-color: #f5576c; }
+        .sidebar-nav a:hover { background-color: #f0f0f0; color: var(--heading-color); }
+        .sidebar-nav a.active {
+            background: var(--accent-color); color: #fff;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+        }
+        .sidebar-nav a i { width: 30px; font-size: 1.1rem; }
+        .sidebar-footer { margin-top: auto; }
 
+        .mobile-nav { display: none; }
+
+        .content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+        }
+        
+        /* --- Responsive Navigation --- */
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); display: none; }
+            .content { margin-left: 0; padding-bottom: var(--mobile-nav-height); }
+            .mobile-nav {
+                display: flex; justify-content: space-around; align-items: center;
+                position: fixed; bottom: 0; left: 0; right: 0;
+                height: var(--mobile-nav-height); background: var(--card-bg-color);
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05); z-index: 1000;
+            }
+            .mobile-nav a {
+                flex: 1; text-align: center; color: var(--muted-text-color);
+                text-decoration: none; transition: color 0.2s ease;
+            }
+            .mobile-nav a.active { color: var(--accent-color); }
+            .mobile-nav a i { font-size: 1.5rem; }
+        }
+
+        /* --- Universal Components --- */
         .card {
-            background: var(--dark-card-bg); border: 1px solid var(--dark-card-border);
-            border-radius: 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px); margin-bottom: 20px;
+            background-color: var(--card-bg-color); border: none;
+            border-radius: var(--border-radius); box-shadow: var(--shadow);
+            margin-bottom: 2rem;
         }
-        body.light-mode .card { background: var(--light-card-bg); border: 1px solid var(--light-card-border); }
-
         .form-control, .form-select {
-            background: var(--dark-input-bg); color: var(--dark-text); border: 1px solid var(--dark-input-border);
-            border-radius: 15px; padding: 10px 15px; transition: all 0.3s ease; backdrop-filter: blur(5px);
-        }
-        body.light-mode .form-control, body.light-mode .form-select {
-            background: var(--light-input-bg); color: var(--light-text); border: 1px solid var(--light-input-border);
+            border-radius: 12px; padding: 12px 16px; border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
         }
         .form-control:focus, .form-select:focus {
-            border-color: #4facfe; box-shadow: 0 0 15px rgba(79, 172, 254, 0.3);
-            background: var(--dark-input-bg); color: var(--dark-text);
+            border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+            background-color: var(--card-bg-color);
         }
-        body.light-mode .form-control:focus, body.light-mode .form-select:focus {
-            background: var(--light-input-bg); color: var(--light-text);
-        }
-
         .btn {
-            border-radius: 25px; padding: 10px 25px; font-weight: 500;
-            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            color: #ffffff; border: none; text-transform: uppercase; letter-spacing: 0.5px;
+            border-radius: 12px; padding: 12px 28px; font-weight: 500;
+            transition: all 0.2s ease-in-out; border: none;
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); color: #ffffff; }
-        .btn-primary { background: var(--primary-gradient); } .btn-success { background: var(--success-gradient); }
-        .btn-danger { background: var(--danger-gradient); } .btn-warning { background: var(--warning-gradient); }
-        .btn-info { background: var(--info-gradient); }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-primary { background-color: var(--accent-color); }
+        .btn-primary:hover { background-color: var(--accent-color-dark); box-shadow: 0 7px 14px rgba(0, 123, 255, 0.2); }
+
+        /* --- Specific Component Styles --- */
+        .table { border-radius: var(--border-radius); overflow: hidden; }
+        .table thead th { background-color: var(--bg-color); color: var(--heading-color); border: none; }
+        .table td, .table th { border-color: var(--border-color) !important; color: var(--text-color); vertical-align: middle; }
         
-        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 1090; }
-
-        .table {
-            border-radius: 20px; overflow: hidden; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            background: var(--dark-card-bg); backdrop-filter: blur(10px); border: none;
-        }
-        .table thead th { background: var(--info-gradient); color: #ffffff; border: none; text-transform: uppercase; }
-        .table td, .table th { border-color: rgba(255, 255, 255, 0.1) !important; color: var(--dark-text); vertical-align: middle; }
-        body.light-mode .table td, body.light-mode .table th { border-color: rgba(0, 0, 0, 0.08) !important; color: var(--light-text); }
-        .table-hover tbody tr:hover { background-color: rgba(255, 255, 255, 0.05); }
-        body.light-mode .table-hover tbody tr:hover { background-color: rgba(0, 0, 0, 0.03); }
-
         .match-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px; flex-wrap: wrap; gap: 10px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+            margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;
         }
-        body.light-mode .match-header { border-bottom: 1px solid rgba(0, 0, 0, 0.08); }
-        .match-score { font-size: 1.2rem; font-weight: bold; color: #4facfe; }
+        .player-tip-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 10px; flex-wrap: wrap; }
+        .player-tip-row .form-select, .player-tip-row .form-control { font-size: 0.9rem; padding: 8px 12px; }
+        
+        .evaluation-status-display { font-weight: bold; padding: 5px 12px; border-radius: 8px; font-size: 0.85em; }
+        .status-ok { background-color: rgba(40, 167, 69, 0.1); color: var(--success-color); }
+        .status-spatne { background-color: rgba(220, 53, 69, 0.1); color: var(--danger-color); }
+        .status-nevyhodnoceno { background-color: #f0f0f0; color: var(--muted-text-color); }
+        
+        .admin-controls h2 { color: var(--danger-color); }
+        .admin-controls .card { border: 1px solid rgba(220, 53, 69, 0.2); }
 
-        .player-tip-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 10px; }
-        .player-tip-row span:first-child { flex-basis: 150px; flex-shrink: 0; font-weight: 500; }
-        .evaluation-status-display { font-weight: bold; padding: 5px 10px; border-radius: 10px; font-size: 0.9em; }
-        .status-ok { background-color: rgba(67, 233, 123, 0.2); color: #43e97b; }
-        .status-spatne { background-color: rgba(250, 112, 154, 0.2); color: #fa709a; }
-        .status-nevyhodnoceno { background-color: rgba(255, 255, 255, 0.1); }
-        body.light-mode .status-nevyhodnoceno { background-color: rgba(0, 0, 0, 0.05); }
-
-        .admin-controls { border: 1px solid #f5576c; }
-        .admin-controls h2 { color: #f5576c; }
-
-        .loading-spinner {
-            width: 3rem; height: 3rem; border: 0.3rem solid #4facfe;
-            border-top-color: transparent; border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        @media (max-width: 768px) {
-            .player-tip-row { flex-wrap: wrap; }
-            .player-tip-row span:first-child { flex-basis: 100%; margin-bottom: 5px; }
-        }
-        @media (max-width: 576px) {
-            .btn { width: 100%; margin-bottom: 10px; }
-            .navbar-nav .btn { width: auto; margin-bottom: 0; }
-            .navbar-collapse .d-flex { flex-direction: column; align-items: stretch !important; }
-            .navbar-collapse .d-flex .btn { margin-top: 10px; }
-        }
+        .modal-content { border-radius: var(--border-radius); border: none; }
     </style>
 </head>
-<body class="d-flex flex-column">
+<body>
     
     <!-- Login Page -->
     <div id="login-page" class="login-container">
         <div class="login-card text-center">
-            <h1><i class="fas fa-futbol"></i> Fotbalové Tipy</h1>
+            <h1><i class="fa-solid fa-futbol" style="color: var(--accent-color);"></i> Fotbalové Tipy</h1>
             <p class="lead mb-4">Měsíční tipovací soutěž</p>
             <div class="mb-3">
                 <input type="text" class="form-control" id="username" placeholder="Uživatelské jméno">
@@ -168,54 +158,73 @@
                 <input type="password" class="form-control" id="pin" placeholder="PIN (4 číslice)" maxlength="4" inputmode="numeric">
             </div>
             <button class="btn btn-primary w-100 mb-2" onclick="login()">Přihlásit se <i class="fas fa-key"></i></button>
-            <button class="btn btn-success w-100" onclick="register()">Registrovat se <i class="fas fa-user-plus"></i></button>
+            <button class="btn btn-outline-secondary w-100" onclick="register()">Registrovat se <i class="fas fa-user-plus"></i></button>
         </div>
     </div>
 
-    <!-- Main App Content -->
-    <div id="main-content" class="d-none flex-grow-1 d-flex flex-column">
-        <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <!-- Main App Layout -->
+    <div id="main-app" class="d-none w-100">
+        <!-- Desktop Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3><i class="fa-solid fa-futbol" style="color: var(--accent-color);"></i> Fotbalové Tipy</h3>
+            </div>
+            <nav class="sidebar-nav flex-grow-1">
+                <a href="#" data-section="dashboard" class="active"><i class="fas fa-home"></i>Dashboard</a>
+                <a href="#" data-section="matches"><i class="fas fa-soccer-ball"></i>Zápasy</a>
+                <a href="#" data-section="leaderboard"><i class="fas fa-trophy"></i>Žebříček</a>
+                <a href="#" data-section="profile"><i class="fas fa-user"></i>Můj Profil</a>
+                <a href="#" data-section="admin" class="d-none" id="admin-nav-item" style="color: var(--danger-color);"><i class="fas fa-shield-alt"></i>Admin</a>
+            </nav>
+            <div class="sidebar-footer">
+                 <div id="user-info" class="p-2 rounded" style="background: var(--bg-color);">
+                     <small>Přihlášen jako</small>
+                     <p class="fw-bold mb-0" id="logged-in-user"></p>
+                 </div>
+                <button class="btn btn-outline-secondary w-100 mt-3" onclick="logout()"><i class="fas fa-sign-out-alt me-1"></i>Odhlásit se</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
             <div class="container-fluid">
-                <a class="navbar-brand" href="#"><i class="fas fa-futbol me-2"></i>Fotbalové Tipy</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item"><a class="nav-link active" href="#" data-section="dashboard"><i class="fas fa-home me-1"></i>Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" data-section="matches"><i class="fas fa-soccer-ball me-1"></i>Zápasy</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" data-section="leaderboard"><i class="fas fa-trophy me-1"></i>Žebříček</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" data-section="profile"><i class="fas fa-user me-1"></i>Můj Profil</a></li>
-                        <li class="nav-item d-none" id="admin-nav-item"><a class="nav-link" href="#" data-section="admin"><i class="fas fa-shield-alt me-1"></i>Admin</a></li>
-                    </ul>
-                    <div class="d-flex align-items-center">
-                        <span class="navbar-text me-3 d-none d-lg-block" id="logged-in-user"></span>
-                        <button class="btn btn-warning btn-sm me-2" onclick="toggleDarkMode()" aria-label="Přepnout režim"><i class="fas fa-moon" id="dark-mode-icon"></i></button>
-                        <button class="btn btn-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt me-1"></i>Odhlásit</button>
-                    </div>
+                <section id="dashboard-section" class="app-section"></section>
+                <section id="matches-section" class="app-section d-none"></section>
+                <section id="leaderboard-section" class="app-section d-none"></section>
+                <section id="profile-section" class="app-section d-none"></section>
+                <section id="admin-section" class="app-section d-none"></section>
+            </div>
+        </main>
+
+        <!-- Mobile Bottom Navigation -->
+        <nav class="mobile-nav">
+            <a href="#" data-section="dashboard" class="active"><i class="fas fa-home"></i></a>
+            <a href="#" data-section="matches"><i class="fas fa-soccer-ball"></i></a>
+            <a href="#" data-section="leaderboard"><i class="fas fa-trophy"></i></a>
+            <a href="#" data-section="profile"><i class="fas fa-user"></i></a>
+        </nav>
+    </div>
+
+    <!-- Modals & Toasts -->
+    <div class="modal fade" id="resetConfirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">Opravdu resetovat soutěž?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tato akce je nevratná. Všechny body, sázky a vyhodnocení budou trvale smazány.</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušit</button>
+                    <button type="button" class="btn btn-danger" id="confirmResetBtn">Ano, resetovat</button>
                 </div>
             </div>
-        </nav>
-
-        <main class="container mt-4 flex-grow-1">
-            <!-- App Sections -->
-            <section id="dashboard-section" class="app-section"></section>
-            <section id="matches-section" class="app-section d-none"></section>
-            <section id="leaderboard-section" class="app-section d-none"></section>
-            <section id="profile-section" class="app-section d-none"></section>
-            <section id="admin-section" class="app-section d-none"></section>
-        </main>
-    </div>
-    
-    <!-- Toast Container -->
-    <div class="toast-container">
-        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header"><strong class="me-auto">Upozornění</strong><button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button></div>
-            <div class="toast-body"></div>
         </div>
     </div>
-    
+    <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
     <!-- JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -233,14 +242,15 @@
         };
         const ADMIN_USERNAME = 'kuba';
 
-        // --- INITIALIZATION ---
+        // --- GLOBAL STATE ---
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         let currentPlayer = null;
         let allUsers = {};
         let allMatches = [];
+        let resetModal;
 
-        // --- AUTHENTICATION ---
+        // --- AUTH & INIT ---
         const register = () => {
             const username = document.getElementById('username').value.trim().toLowerCase();
             const pin = document.getElementById('pin').value.trim();
@@ -272,23 +282,17 @@
             }).catch(handleFirebaseError);
         };
 
-        const logout = () => {
-            sessionStorage.removeItem('currentPlayer');
-            location.reload();
-        };
+        const logout = () => { sessionStorage.removeItem('currentPlayer'); location.reload(); };
 
-        // --- APP LOGIC ---
         const initApp = async () => {
             currentPlayer = sessionStorage.getItem('currentPlayer');
             if (!currentPlayer) return;
 
             document.getElementById('login-page').classList.add('d-none');
-            document.getElementById('main-content').classList.remove('d-none');
-            document.getElementById('logged-in-user').textContent = `Uživatel: ${currentPlayer}`;
+            document.getElementById('main-app').classList.remove('d-none');
+            document.getElementById('logged-in-user').textContent = currentPlayer;
             
-            if (currentPlayer === ADMIN_USERNAME) {
-                document.getElementById('admin-nav-item').classList.remove('d-none');
-            }
+            if (currentPlayer === ADMIN_USERNAME) document.getElementById('admin-nav-item').classList.remove('d-none');
             
             setupNavigation();
             
@@ -296,25 +300,23 @@
                 allMatches = await loadMatchesFromFile();
                 setupFirebaseListeners();
                 showSection('dashboard');
+                resetModal = new bootstrap.Modal(document.getElementById('resetConfirmModal'));
             } catch (error) {
                 showToast(error.message, 'danger');
                 const errorHtml = `<div class="alert alert-danger"><strong>Chyba:</strong> ${error.message}</div>`;
                 document.getElementById('dashboard-section').innerHTML = errorHtml;
-                document.getElementById('matches-section').innerHTML = errorHtml;
             }
         };
-
+        
         const setupFirebaseListeners = () => {
             database.ref('users').on('value', snapshot => {
                 allUsers = snapshot.val() || {};
                 renderAllSections();
             }, handleFirebaseError);
-
-            // Listen for changes in results to re-render everything
             database.ref('matchResults').on('value', () => renderAllSections(), handleFirebaseError);
         };
 
-        const loadMatchesFromFile = async () => {
+        const loadMatchesFromFile = async () => { /* ... Function remains the same, it's already robust ... */
             const response = await fetch('matches.txt');
             if (!response.ok) {
                 if(response.status === 404) throw new Error('Soubor `matches.txt` nebyl nalezen. Ujistěte se, že existuje ve stejné složce jako `index.html`.');
@@ -336,30 +338,27 @@
                     rounds.push({ round: currentRound, matches: [] });
                     roundIndex++;
                 } else {
-                    if (roundIndex === -1) { // In case the file starts with a match
+                    if (roundIndex === -1) {
                         rounds.push({ round: currentRound, matches: [] });
                         roundIndex = 0;
                     }
                     const matchIndex = rounds[roundIndex].matches.length;
                     rounds[roundIndex].matches.push({
-                        id: `r${roundIndex}m${matchIndex}`, // deterministic ID based on position
+                        id: `r${roundIndex}m${matchIndex}`,
                         name: line.trim()
                     });
                 }
             });
             return rounds;
         };
-        
-        // --- RENDERING ---
+
+        // --- RENDER FUNCTIONS ---
         const renderAllSections = () => {
-            renderDashboard();
-            renderLeaderboard();
-            renderMatches();
-            renderProfile();
+            renderDashboard(); renderLeaderboard(); renderMatches(); renderProfile();
             if(currentPlayer === ADMIN_USERNAME) renderAdminPanel();
         };
-        
-        const renderDashboard = async () => {
+
+        const renderDashboard = async () => { /* ... Function is good, just adapting to new CSS ... */
             const pointsSnap = await database.ref(`points/${currentPlayer}`).once('value');
             const betsSnap = await database.ref(`totalBets/${currentPlayer}`).once('value');
             const totalBetsSnap = await database.ref('totalBets').once('value');
@@ -368,36 +367,31 @@
             const myBet = betsSnap.val() || 0;
             const totalPool = Object.values(totalBetsSnap.val() || {}).reduce((sum, bet) => sum + bet, 0);
 
-            const monthNames = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
-
             document.getElementById('dashboard-section').innerHTML = `
-                <h2 class="mb-4"><i class="fas fa-chart-line me-2"></i>Přehled soutěže</h2>
+                <h2 class="mb-4">Dashboard</h2>
                 <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <div class="card p-4 h-100">
+                    <div class="col-lg-8 mb-4">
+                        <div class="card p-4">
+                            <h3><i class="fas fa-user-circle me-2 text-primary"></i>Můj stav</h3>
+                            <div class="d-flex justify-content-around text-center mt-3">
+                                <div><p class="fs-2 fw-bold mb-1">${myPoints}</p><small class="text-muted">BODŮ</small></div>
+                                <div><p class="fs-2 fw-bold mb-1">${myBet.toLocaleString('cs-CZ')}</p><small class="text-muted">VSAZENO (KČ)</small></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                         <div class="card p-4 bg-primary text-white">
                             <h3><i class="fas fa-coins me-2"></i>Celkový bank</h3>
-                            <p class="fs-4 mb-0">${totalPool.toLocaleString('cs-CZ')} Kč</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="card p-4 h-100">
-                            <h3><i class="fas fa-calendar-alt me-2"></i>Aktuální měsíc</h3>
-                            <p class="fs-4 mb-0">${monthNames[new Date().getMonth()]} ${new Date().getFullYear()}</p>
+                            <p class="fs-2 fw-bold mb-0">${totalPool.toLocaleString('cs-CZ')} Kč</p>
                         </div>
                     </div>
                 </div>
-                <div class="card p-4">
-                    <h3><i class="fas fa-user-circle me-2"></i>Můj stav</h3>
-                    <div class="row pt-2">
-                        <div class="col-md-6"><p class="mb-0">Body: <span class="fw-bold fs-5">${myPoints}</span></p></div>
-                        <div class="col-md-6"><p class="mb-0">Celková sázka: <span class="fw-bold fs-5">${myBet.toLocaleString('cs-CZ')} Kč</span></p></div>
-                    </div>
-                </div>
+                <div class="card p-4"><h3><i class="fa-solid fa-fire text-warning"></i>Nadcházející zápasy</h3><p class="text-muted">Brzy zde uvidíte přehled nadcházejících zápasů...</p></div>
             `;
         };
 
-        const renderLeaderboard = async () => {
-            const pointsSnap = await database.ref('points').once('value');
+        const renderLeaderboard = async () => { /* ... Function is good, just adapting to new CSS ... */
+             const pointsSnap = await database.ref('points').once('value');
             const betsSnap = await database.ref('totalBets').once('value');
             const points = pointsSnap.val() || {};
             const totalBets = betsSnap.val() || {};
@@ -411,29 +405,30 @@
             let tableBodyHTML = '';
             if (playerList.length > 0) {
                 playerList.forEach((player, index) => {
-                    tableBodyHTML += `<tr>
-                        <td>${index + 1}</td>
+                    const highlightClass = player.username === currentPlayer ? 'table-primary' : '';
+                    tableBodyHTML += `<tr class="${highlightClass}">
+                        <td class="fw-bold">${index + 1}</td>
                         <td>${player.username}</td>
                         <td>${player.points}</td>
-                        <td>${player.totalBet.toLocaleString('cs-CZ')}</td>
+                        <td>${player.totalBet.toLocaleString('cs-CZ')} Kč</td>
                     </tr>`;
                 });
             } else {
-                tableBodyHTML = '<tr><td colspan="4" class="text-center">Žádní hráči v žebříčku.</td></tr>';
+                tableBodyHTML = '<tr><td colspan="4" class="text-center p-4">Žádní hráči v žebříčku.</td></tr>';
             }
 
             document.getElementById('leaderboard-section').innerHTML = `
-                <h2 class="mb-4"><i class="fas fa-trophy me-2"></i>Žebříček Hráčů</h2>
-                <div class="card p-3"><div class="table-responsive"><table class="table table-hover">
-                    <thead><tr><th>#</th><th>Hráč</th><th>Body</th><th>Celková sázka (Kč)</th></tr></thead>
+                <h2 class="mb-4">Žebříček hráčů</h2>
+                <div class="card"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0">
+                    <thead><tr><th>#</th><th>Hráč</th><th>Body</th><th>Celková sázka</th></tr></thead>
                     <tbody>${tableBodyHTML}</tbody>
-                </table></div></div>`;
+                </table></div></div></div>`;
         };
         
-        const renderMatches = async () => {
-            let html = `<h2 class="mb-4"><i class="fas fa-soccer-ball me-2"></i>Zápasy a Tipy</h2>`;
+        const renderMatches = async () => { /* ... Function is good, just adapting to new CSS ... */
+            let html = `<h2 class="mb-4">Zápasy a tipy</h2>`;
             if (allMatches.length === 0) {
-                html += '<p class="text-center text-muted">Žádné zápasy k zobrazení.</p>';
+                html += '<div class="card card-body text-center"><p class="mb-0 text-muted">Žádné zápasy k zobrazení.</p></div>';
                 document.getElementById('matches-section').innerHTML = html;
                 return;
             }
@@ -460,15 +455,15 @@
                         const isCurrentUser = username === currentPlayer;
                         
                         playerRowsHTML += `
-                            <div class="player-tip-row">
-                                <span><i class="fas fa-user me-2 opacity-75"></i>${username}</span>
-                                <select class="form-select form-select-sm w-auto" onchange="saveTip('${match.id}', this.value)" ${!isCurrentUser || isEvaluated ? 'disabled' : ''}>
+                            <div class="player-tip-row p-2 rounded" style="background: ${isCurrentUser ? 'rgba(0,123,255,0.05)' : 'transparent'}">
+                                <span><i class="fas fa-user me-2 opacity-50"></i>${username}</span>
+                                <select class="form-select" onchange="saveTip('${match.id}', this.value)" ${!isCurrentUser || isEvaluated ? 'disabled' : ''}>
                                     <option value="" ${tip === undefined ? 'selected' : ''}>Tip</option>
                                     <option value="1" ${tip === 1 ? 'selected' : ''}>1</option>
                                     <option value="0" ${tip === 0 ? 'selected' : ''}>0</option>
                                     <option value="2" ${tip === 2 ? 'selected' : ''}>2</option>
                                 </select>
-                                <input type="number" class="form-control form-control-sm w-auto" placeholder="Sázka" min="0" max="1000" step="10" value="${bet}" onchange="saveBet('${match.id}', this.value)" ${!isCurrentUser || isEvaluated ? 'disabled' : ''}>
+                                <input type="number" class="form-control" style="width: 120px;" placeholder="Sázka" min="0" max="1000" step="10" value="${bet}" onchange="saveBet('${match.id}', this.value)" ${!isCurrentUser || isEvaluated ? 'disabled' : ''}>
                                 <span class="evaluation-status-display status-${evaluation}">${evaluation.toUpperCase()}</span>
                             </div>`;
                     });
@@ -477,38 +472,48 @@
                         <div class="card"><div class="card-body">
                             <div class="match-header">
                                 <h5><i class="fas fa-futbol me-2"></i>${match.name}</h5>
-                                <span class="match-score">${officialResultText}</span>
+                                <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill p-2">${officialResultText}</span>
                             </div>
-                            <div>${playerRowsHTML}</div>
+                            <div class="mt-3">${playerRowsHTML}</div>
                         </div></div>`;
                 });
             });
             document.getElementById('matches-section').innerHTML = html;
         };
 
-        const renderProfile = async () => {
+        const renderProfile = async () => { /* ... Function is good, just adapting to new CSS ... */ 
             const profileSnap = await database.ref(`profiles/${currentPlayer}`).once('value');
             const account = profileSnap.val()?.account || '';
             document.getElementById('profile-section').innerHTML = `
-                <h2 class="mb-4"><i class="fas fa-user me-2"></i>Můj Profil</h2>
-                <div class="card p-4 mb-4">
-                    <h3><i class="fas fa-address-card me-2"></i>Bankovní údaje</h3>
-                    <div class="mb-3"><label for="my-account" class="form-label">Číslo účtu (formát XXXXXX-XXXXXXXXXX):</label><input type="text" class="form-control" id="my-account" value="${account}" placeholder="123456-7890123456" maxlength="24"></div>
-                    <div class="mb-4"><label for="my-pin" class="form-label">Změna PIN (nový 4-místný PIN):</label><input type="password" class="form-control" id="my-pin" placeholder="••••" maxlength="4"></div>
-                    <button class="btn btn-info" onclick="saveProfile()"><i class="fas fa-save me-1"></i>Uložit profil</button>
-                </div>
-                <div class="card p-4">
-                    <h3><i class="fas fa-qrcode me-2"></i>QR kód pro výhru</h3>
-                    <p class="text-muted">Generovat QR kód pro vyplacení výhry, pokud jsi vítěz měsíční soutěže.</p>
-                    <button class="btn btn-primary" onclick="generateQR()"><i class="fas fa-qrcode me-1"></i>Generovat QR pro výhru</button>
-                    <div id="qr-container" class="text-center mt-3 d-none">
-                        <canvas id="qr-canvas"></canvas>
-                        <p class="mt-2 text-muted small" id="qr-details"></p>
+                <h2 class="mb-4">Můj profil</h2>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-body p-4">
+                                <h3><i class="fas fa-address-card me-2"></i>Bankovní údaje</h3>
+                                <div class="mb-3"><label for="my-account" class="form-label">Číslo účtu (formát XXXXXX-XXXXXXXXXX):</label><input type="text" class="form-control" id="my-account" value="${account}" placeholder="123456-7890123456" maxlength="24"></div>
+                                <div class="mb-3"><label for="my-pin" class="form-label">Změna PIN (nový 4-místný PIN):</label><input type="password" class="form-control" id="my-pin" placeholder="••••" maxlength="4"></div>
+                                <button class="btn btn-primary" onclick="saveProfile()"><i class="fas fa-save me-1"></i>Uložit profil</button>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-body p-4">
+                                <h3><i class="fas fa-qrcode me-2"></i>QR kód pro výhru</h3>
+                                <p class="text-muted">Generovat QR kód pro vyplacení výhry, pokud jsi vítěz měsíční soutěže.</p>
+                                <button class="btn btn-primary" onclick="generateQR()"><i class="fas fa-qrcode me-1"></i>Generovat QR</button>
+                                <div id="qr-container" class="text-center mt-3 d-none">
+                                    <canvas id="qr-canvas"></canvas>
+                                    <p class="mt-2 text-muted small" id="qr-details"></p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>`;
         };
         
-        const renderAdminPanel = async () => {
+        const renderAdminPanel = async () => { /* ... Adapting to new CSS and Modal ... */ 
             const resultsSnap = await database.ref('matchResults').once('value');
             const matchResults = resultsSnap.val() || {};
             
@@ -521,7 +526,7 @@
                                 <span class="me-3">${match.name}</span>
                                 <div class="btn-group">
                                     <button class="btn btn-sm btn-success" onclick="adminEvaluateMatch('${match.id}', 1)">1</button>
-                                    <button class="btn btn-sm btn-warning" onclick="adminEvaluateMatch('${match.id}', 0)">0</button>
+                                    <button class="btn btn-sm btn-warning text-dark" onclick="adminEvaluateMatch('${match.id}', 0)">0</button>
                                     <button class="btn btn-sm btn-danger" onclick="adminEvaluateMatch('${match.id}', 2)">2</button>
                                 </div>
                             </div>`;
@@ -534,28 +539,27 @@
 
             document.getElementById('admin-section').innerHTML = `
                 <div class="admin-controls card p-4">
-                    <h2 class="mb-4"><i class="fas fa-cogs me-2"></i>Administrace Soutěže</h2>
-                    <div class="card p-4 mb-4">
+                    <h2 class="mb-4"><i class="fas fa-cogs me-2"></i>Administrace</h2>
+                    <div class="card mb-4"><div class="card-body p-4">
                         <h3><i class="fas fa-check-double me-2"></i>Vyhodnocení zápasů</h3>
                         ${unevaluatedMatchesHTML}
-                    </div>
-                    <div class="card p-4">
+                    </div></div>
+                    <div class="card"><div class="card-body p-4">
                         <h3><i class="fas fa-redo-alt me-2"></i>Měsíční Reset</h3>
-                        <p class="text-muted">Resetuje body, sázky a vyhodnocení pro novou měsíční soutěž. Tuto akci nelze vrátit!</p>
-                        <button class="btn btn-danger" onclick="confirmReset()"><i class="fas fa-exclamation-triangle me-1"></i>Resetovat Soutěž</button>
-                    </div>
+                        <p class="text-muted">Resetuje body, sázky a vyhodnocení. Tuto akci nelze vrátit!</p>
+                        <button class="btn btn-danger" onclick="showResetModal()"><i class="fas fa-exclamation-triangle me-1"></i>Resetovat Soutěž</button>
+                    </div></div>
                 </div>`;
         };
 
-        // --- USER ACTIONS ---
-        const saveTip = (matchId, tip) => {
+        // --- USER & ADMIN ACTIONS ---
+        const saveTip = (matchId, tip) => { /* ... No change ... */
             const value = tip === "" ? null : parseInt(tip);
             database.ref(`tips/${currentPlayer}/${matchId}`).set(value)
                 .then(() => showToast('Tip uložen!', 'success'))
                 .catch(handleFirebaseError);
-        };
-
-        const saveBet = (matchId, bet) => {
+         };
+        const saveBet = (matchId, bet) => { /* ... No change ... */ 
             const value = bet === "" ? null : parseInt(bet);
             if (value !== null && (isNaN(value) || value < 0 || value > 1000)) {
                 return showToast('Sázka musí být mezi 0 a 1000 Kč!', 'danger');
@@ -567,15 +571,13 @@
                 })
                 .catch(handleFirebaseError);
         };
-
-        const updateTotalBet = (username) => {
+        const updateTotalBet = (username) => { /* ... No change ... */ 
             database.ref(`bets/${username}`).once('value', snapshot => {
                 const totalBet = Object.values(snapshot.val() || {}).reduce((sum, b) => sum + (parseInt(b) || 0), 0);
                 database.ref(`totalBets/${username}`).set(totalBet);
             }).catch(handleFirebaseError);
         };
-        
-        const saveProfile = () => {
+        const saveProfile = () => { /* ... No change ... */ 
             const account = document.getElementById('my-account').value.trim();
             const pin = document.getElementById('my-pin').value.trim();
             
@@ -597,20 +599,16 @@
                 showToast('Nebyly provedeny žádné změny.', 'info');
             }
         };
-
-        const generateQR = async () => {
-             const pointsSnap = await database.ref('points').once('value');
+        const generateQR = async () => { /* ... No change ... */ 
+            const pointsSnap = await database.ref('points').once('value');
              const totalBetsSnap = await database.ref('totalBets').once('value');
              const points = pointsSnap.val() || {};
              const totalBets = totalBetsSnap.val() || {};
 
-             if (Object.keys(points).length === 0) return showToast('Soutěž ještě nezačala nebo nemá žádné body.', 'info');
+             if (Object.keys(points).length === 0) return showToast('Soutěž ještě nezačala.', 'info');
 
              let maxPoints = -1;
-             Object.values(points).forEach(score => {
-                 if (score > maxPoints) maxPoints = score;
-             });
-
+             Object.values(points).forEach(score => { if (score > maxPoints) maxPoints = score; });
              if(maxPoints <= 0) return showToast('Nikdo zatím nezískal body.', 'info');
 
              const winners = Object.keys(points).filter(user => points[user] === maxPoints);
@@ -629,27 +627,29 @@
              const canvas = document.getElementById('qr-canvas');
              const paymentDetails = `SPD*1.0*ACC:${account.replace('-', '')}*AM:${winnings.toFixed(2)}*CC:CZK*MSG:Vyhra FTB Tipy`;
 
-             QRCode.toCanvas(canvas, paymentDetails, { width: 200 }, error => {
+             QRCode.toCanvas(canvas, paymentDetails, { width: 200, margin: 1 }, error => {
                  if (error) return handleFirebaseError(error);
                  document.getElementById('qr-details').textContent = `Platba ${winnings.toFixed(2)} Kč na účet ${account}`;
                  qrContainer.classList.remove('d-none');
                  showToast('QR kód úspěšně vygenerován!', 'success');
              });
         };
-
-        // --- ADMIN ACTIONS ---
+        
+        const showResetModal = () => resetModal.show();
         const confirmReset = () => {
-            if (confirm('Opravdu chcete resetovat celou měsíční soutěž? Tato akce je nevratná!')) {
-                const pathsToRemove = ['points', 'totalBets', 'bets', 'tips', 'evaluations', 'matchResults'];
-                const updates = {};
-                pathsToRemove.forEach(path => updates[path] = null);
-                database.ref().update(updates)
-                    .then(() => showToast('Soutěž byla úspěšně resetována!', 'success'))
-                    .catch(handleFirebaseError);
-            }
+            const pathsToRemove = ['points', 'totalBets', 'bets', 'tips', 'evaluations', 'matchResults'];
+            const updates = {};
+            pathsToRemove.forEach(path => updates[path] = null);
+            database.ref().update(updates)
+                .then(() => {
+                    resetModal.hide();
+                    showToast('Soutěž byla úspěšně resetována!', 'success');
+                })
+                .catch(handleFirebaseError);
         };
+        document.getElementById('confirmResetBtn').addEventListener('click', confirmReset);
 
-        const adminEvaluateMatch = async (matchId, result) => {
+        const adminEvaluateMatch = async (matchId, result) => { /* ... No change, logic is solid ... */ 
             await database.ref(`matchResults/${matchId}`).set(result);
             const tipsSnapshot = await database.ref('tips').once('value');
             const allTips = tipsSnapshot.val() || {};
@@ -673,47 +673,45 @@
             showToast('Zápas úspěšně vyhodnocen a body připsány!', 'success');
         };
 
-        // --- UTILITIES ---
+        // --- UTILITY FUNCTIONS ---
         const setupNavigation = () => {
-            const navLinks = document.querySelectorAll('.nav-link');
+            const navLinks = document.querySelectorAll('.sidebar-nav a, .mobile-nav a');
             navLinks.forEach(link => link.addEventListener('click', e => {
                 e.preventDefault();
+                const section = e.currentTarget.dataset.section;
+                showSection(section);
+                
                 navLinks.forEach(l => l.classList.remove('active'));
-                e.target.classList.add('active');
-                showSection(e.target.dataset.section);
+                document.querySelectorAll(`a[data-section="${section}"]`).forEach(l => l.classList.add('active'));
             }));
         };
+
         const showSection = (sectionId) => {
             document.querySelectorAll('.app-section').forEach(s => s.classList.add('d-none'));
             document.getElementById(`${sectionId}-section`).classList.remove('d-none');
         };
-        const toggleDarkMode = () => {
-            document.body.classList.toggle('light-mode');
-            const icon = document.getElementById('dark-mode-icon');
-            icon.className = document.body.classList.contains('light-mode') ? 'fas fa-sun' : 'fas fa-moon';
-            localStorage.setItem('darkMode', document.body.classList.contains('light-mode') ? 'enabled' : 'disabled');
-        };
+
         const showToast = (message, type = 'info') => {
-            const toastEl = document.getElementById('liveToast');
-            const toastHeader = toastEl.querySelector('.toast-header');
-            toastEl.querySelector('.toast-body').textContent = message;
-            toastHeader.className = 'toast-header'; // Reset classes
-            const bgClass = `bg-${type}`;
-            if(type === 'success' || type === 'danger') toastHeader.classList.add('text-white');
-            toastHeader.classList.add(bgClass);
-            new bootstrap.Toast(toastEl).show();
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = `toast-${Date.now()}`;
+            const toastHTML = `
+                <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>`;
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const toastEl = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
         };
+
         const handleFirebaseError = (error) => { console.error("Firebase Error:", error); showToast(`Chyba databáze: ${error.message}`, 'danger'); };
         
-        // --- On Page Load ---
-        window.onload = () => {
-            if (localStorage.getItem('darkMode') === 'enabled') {
-                toggleDarkMode();
-            }
-            if (sessionStorage.getItem('currentPlayer')) {
-                initApp();
-            }
-        };
+        // --- ON PAGE LOAD ---
+        window.onload = () => { if (sessionStorage.getItem('currentPlayer')) initApp(); };
     </script>
 </body>
 </html>
