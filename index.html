@@ -62,7 +62,7 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(0, 0, 0, 0.05);
         }
-        .tip-input, .bet-input, .score-input, .account-input, .pin-input {
+        .tip-input, .bet-input, .account-input, .pin-input {
             width: 70px;
             border-radius: 15px;
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -73,17 +73,17 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(5px);
         }
-        body.light-mode .tip-input, body.light-mode .bet-input, body.light-mode .score-input, body.light-mode .account-input, body.light-mode .pin-input {
+        body.light-mode .tip-input, body.light-mode .bet-input, body.light-mode .account-input, body.light-mode .pin-input {
             background: rgba(255, 255, 255, 0.9);
             color: #333333;
             border: 2px solid rgba(0, 0, 0, 0.1);
         }
-        .tip-input:focus, .bet-input:focus, .score-input:focus, .account-input:focus, .pin-input:focus {
+        .tip-input:focus, .bet-input:focus, .account-input:focus, .pin-input:focus {
             border-color: #4facfe;
             box-shadow: 0 0 15px rgba(79, 172, 254, 0.3);
             transform: scale(1.05);
         }
-        body.light-mode .tip-input:focus, body.light-mode .bet-input:focus, body.light-mode .score-input:focus, body.light-mode .account-input:focus, body.light-mode .pin-input:focus {
+        body.light-mode .tip-input:focus, body.light-mode .bet-input:focus, body.light-mode .account-input:focus, body.light-mode .pin-input:focus {
             border-color: #4facfe;
             box-shadow: 0 0 15px rgba(79, 172, 254, 0.2);
         }
@@ -215,8 +215,26 @@
         .form-label {
             font-weight: 500;
         }
+        .match-tips-table {
+            margin-top: 10px;
+        }
+        .match-tips-table th, .match-tips-table td {
+            vertical-align: middle;
+        }
+        .evaluation-btn {
+            margin-left: 10px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+        .evaluation-status {
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        #qr-container {
+            display: none;
+        }
         @media (max-width: 576px) {
-            .tip-input, .bet-input, .score-input, .account-input, .pin-input {
+            .tip-input, .bet-input, .account-input, .pin-input {
                 width: 100%;
                 margin-bottom: 10px;
             }
@@ -227,6 +245,10 @@
             }
             .row > div {
                 margin-bottom: 15px;
+            }
+            .evaluation-btn {
+                margin-top: 5px;
+                width: 100%;
             }
         }
     </style>
@@ -252,7 +274,7 @@
         <button class="btn btn-secondary btn-dark-mode" onclick="toggleDarkMode()">🌙 Režim</button>
         <button class="btn btn-danger btn-sign-out" onclick="logout()">Odhlásit se 🚪</button>
 
-        <h2>🏆 Tabulka 💰</h2>
+        <h2>🏆 Tabulka hráčů 💰</h2>
         <table class="table" id="player-table">
             <thead>
                 <tr>
@@ -265,16 +287,26 @@
         </table>
         <button class="btn btn-warning mb-4" onclick="resetPoints()">Reset bodů a sázek 🔄</button>
 
-        <!-- Sekce pro profil -->
+        <!-- Sekce pro profil (pouze pro aktuálního uživatele) -->
         <div class="profile-section">
-            <h3>👤 Profil - Bankovní údaje 💳</h3>
-            <div class="row" id="profile-accounts"></div>
-            <div class="row" id="profile-pins"></div>
+            <h3>👤 Můj profil - Bankovní údaje 💳</h3>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Číslo účtu: </label>
+                    <input type="text" class="account-input form-control" id="my-account" placeholder="123456-7890123456" maxlength="24">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Změna PIN: </label>
+                    <input type="password" class="pin-input form-control" id="my-pin" placeholder="Nový PIN" maxlength="4">
+                </div>
+            </div>
+            <button class="btn btn-info" onclick="saveProfile()">Uložit profil ✅</button>
+            <button class="btn btn-primary ms-2" onclick="generateQR()">Generovat QR pro výhru 📱</button>
+            <div id="qr-container" class="qr-code"></div>
         </div>
 
         <h2>⚽ Zápasy a tipy 🎯</h2>
         <div id="matches-container"></div>
-        <div id="round-results" class="mt-4"></div>
     </div>
 
     <div class="toast-container">
@@ -367,26 +399,29 @@
             showToast('Odhlášení úspěšné. 👋');
         }
 
-        // Funkce pro uložení čísla účtu
-        function saveAccount(username, account) {
+        // Funkce pro uložení profilu (účet a PIN)
+        function saveProfile() {
+            const username = sessionStorage.getItem('currentPlayer');
+            const account = document.getElementById('my-account').value.trim();
+            const pin = document.getElementById('my-pin').value.trim();
+
             if (account && !/^\d{6}-\d{10}$/.test(account)) {
                 showToast('Číslo účtu musí být ve formátu XXXXXX-XXXXXXXXXX! 💳');
-                document.getElementById(`account-${username}`).value = '';
                 return;
             }
-            database.ref(`profiles/${username}/account`).set(account || null);
-            showToast(`Číslo účtu pro ${username} uloženo! ✅`);
-        }
-
-        // Funkce pro uložení nového PINu
-        function savePin(username, pin) {
-            if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+            if (pin && (pin.length !== 4 || !/^\d{4}$/.test(pin))) {
                 showToast('PIN musí být 4 číslice! 🔢');
-                document.getElementById(`pin-${username}`).value = '';
                 return;
             }
-            database.ref(`users/${username}/pin`).set(pin);
-            showToast(`PIN pro ${username} změněn! 🔒`);
+
+            if (account) {
+                database.ref(`profiles/${username}/account`).set(account);
+            }
+            if (pin) {
+                database.ref(`users/${username}/pin`).set(pin);
+                document.getElementById('my-pin').value = '';
+            }
+            showToast('Profil uložen! ✅');
         }
 
         // Funkce pro zobrazení notifikace
@@ -452,33 +487,8 @@
             });
         }
 
-        // Funkce pro vykreslení profilů
-        function renderProfiles(users) {
-            const accountsContainer = document.getElementById('profile-accounts');
-            const pinsContainer = document.getElementById('profile-pins');
-            accountsContainer.innerHTML = '';
-            pinsContainer.innerHTML = '';
-            Object.keys(users).forEach(username => {
-                const accountDiv = document.createElement('div');
-                accountDiv.className = 'col-md-6 mb-3';
-                accountDiv.innerHTML = `
-                    <label class="form-label">${username} číslo účtu: </label>
-                    <input type="text" class="account-input form-control" id="account-${username}" placeholder="123456-7890123456" maxlength="24" onchange="saveAccount('${username}', this.value)">
-                `;
-                accountsContainer.appendChild(accountDiv);
-
-                const pinDiv = document.createElement('div');
-                pinDiv.className = 'col-md-6 mb-3';
-                pinDiv.innerHTML = `
-                    <label class="form-label">Změna PIN pro ${username}: </label>
-                    <input type="password" class="pin-input form-control" id="pin-${username}" placeholder="Nový PIN" maxlength="4" onchange="savePin('${username}', this.value)">
-                `;
-                pinsContainer.appendChild(pinDiv);
-            });
-        }
-
-        // Funkce pro vykreslení zápasů a formulářů pro tipy
-        function renderMatches(rounds, users) {
+        // Funkce pro vykreslení zápasů a tipů
+        function renderMatches(rounds, users, currentPlayer) {
             const container = document.getElementById('matches-container');
             container.innerHTML = '';
             rounds.forEach((round, roundIndex) => {
@@ -486,32 +496,46 @@
                 roundElement.className = 'card';
                 roundElement.innerHTML = `
                     <div class="round-title">${round.round} ⚽</div>
-                    <div class="card-body">
-                        <button class="btn btn-info mb-3" onclick="evaluateRound(${roundIndex})">Vyhodnotit kolo 🏁</button>
-                    </div>
+                    <div class="card-body"></div>
                 `;
                 
                 round.matches.forEach((match, matchIndex) => {
                     const matchDiv = document.createElement('div');
                     matchDiv.className = 'card mb-3';
-                    let matchHtml = `<div class="card-body"><h5 class="card-title">⚽ ${match}</h5>`;
+                    matchDiv.innerHTML = `
+                        <div class="card-body">
+                            <h5 class="card-title">⚽ ${match}</h5>
+                            <table class="table table-sm match-tips-table">
+                                <thead>
+                                    <tr>
+                                        <th>Hráč</th>
+                                        <th>Tip</th>
+                                        <th>Sázka (Kč)</th>
+                                        <th>Vyhodnocení</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tips-body-${roundIndex}-${matchIndex}"></tbody>
+                            </table>
+                        </div>
+                    `;
+                    roundElement.querySelector('.card-body').appendChild(matchDiv);
+
+                    // Vykreslení řádků pro hráče
+                    const tipsBody = matchDiv.querySelector(`#tips-body-${roundIndex}-${matchIndex}`);
                     Object.keys(users).forEach(username => {
-                        matchHtml += `
-                            <div class="row mb-2">
-                                <div class="col-md-6">
-                                    <label class="form-label">${username}: </label>
-                                    <input type="number" class="tip-input" id="${username}-tip-${roundIndex}-${matchIndex}" min="0" max="2" step="1" placeholder="Tip" onchange="saveTip('${username}', ${roundIndex}, ${matchIndex}, this.value)">
-                                    <input type="number" class="bet-input" id="${username}-bet-${roundIndex}-${matchIndex}" min="0" max="1000" step="10" placeholder="Sázka 💰" onchange="saveBet('${username}', ${roundIndex}, ${matchIndex}, this.value)">
-                                    <input type="number" class="score-input" id="home-score-${roundIndex}-${matchIndex}" min="0" max="9" placeholder="Dom. góly" onchange="saveScore('home', ${roundIndex}, ${matchIndex}, this.value)">
-                                    <input type="number" class="score-input" id="away-score-${roundIndex}-${matchIndex}" min="0" max="9" placeholder="Host. góly" onchange="saveScore('away', ${roundIndex}, ${matchIndex}, this.value)">
-                                    <button class="btn btn-success btn-sm" onclick="evaluateMatch(${roundIndex}, ${matchIndex})">Vyhodnotit ⚡</button>
-                                </div>
-                            </div>
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${username}</td>
+                            <td>
+                                <input type="number" class="tip-input" id="${username}-tip-${roundIndex}-${matchIndex}" min="0" max="2" step="1" placeholder="Tip" onchange="saveTip('${username}', ${roundIndex}, ${matchIndex}, this.value)" ${username !== currentPlayer ? 'disabled' : ''}>
+                            </td>
+                            <td>
+                                <input type="number" class="bet-input" id="${username}-bet-${roundIndex}-${matchIndex}" min="0" max="1000" step="10" placeholder="Sázka 💰" onchange="saveBet('${username}', ${roundIndex}, ${matchIndex}, this.value)" ${username !== currentPlayer ? 'disabled' : ''}>
+                            </td>
+                            <td id="${username}-eval-${roundIndex}-${matchIndex}"></td>
                         `;
+                        tipsBody.appendChild(row);
                     });
-                    matchHtml += '</div>';
-                    matchDiv.innerHTML = matchHtml;
-                    roundElement.appendChild(matchDiv);
                 });
                 container.appendChild(roundElement);
             });
@@ -542,39 +566,23 @@
             showToast(`Sázka pro ${username} uložena! 💸`);
         }
 
-        // Funkce pro uložení skóre
-        function saveScore(type, roundIndex, matchIndex, score) {
-            const value = parseInt(score);
-            if (isNaN(value) || value < 0 || value > 9) {
-                showToast('Skóre musí být číslo mezi 0 a 9! ⚽');
+        // Funkce pro vyhodnocení tipu uživatelem (jen svého)
+        function evaluateTip(username, roundIndex, matchIndex, status) {
+            if (username !== sessionStorage.getItem('currentPlayer')) {
+                showToast('Můžeš vyhodnotit jen svůj tip! 🔒');
                 return;
             }
-            database.ref(`scores/${roundIndex}/${matchIndex}/${type}`).set(value);
-        }
-
-        // Funkce pro automatické vyhodnocení zápasu
-        function evaluateMatch(roundIndex, matchIndex) {
-            const homeScore = parseInt(document.getElementById(`home-score-${roundIndex}-${matchIndex}`).value) || 0;
-            const awayScore = parseInt(document.getElementById(`away-score-${roundIndex}-${matchIndex}`).value) || 0;
-            if (homeScore === 0 && awayScore === 0) {
-                showosemite: showToast('Zadejte skóre zápasu! ⚽');
-                return;
-            }
-
-            const actualResult = homeScore > awayScore ? 2 : (homeScore === awayScore ? 1 : 0);
-
-            database.ref('users').once('value', (snapshot) => {
-                const users = snapshot.val() || {};
-                Object.keys(users).forEach(username => {
-                    database.ref(`tips/${username}/${roundIndex}/${matchIndex}`).once('value', (snap) => {
-                        const tip = snap.val() || 0;
-                        if (tip === actualResult) updatePoints(username, 3);
-                    });
-                });
+            database.ref(`evaluations/${username}/${roundIndex}/${matchIndex}`).once('value', (snap) => {
+                if (snap.val()) {
+                    showToast('Tip již vyhodnocen! ⚠️');
+                    return;
+                }
+                database.ref(`evaluations/${username}/${roundIndex}/${matchIndex}`).set(status);
+                if (status === 'ok') {
+                    updatePoints(username, 3);
+                }
+                showToast(`Tip vyhodnocen jako ${status === 'ok' ? 'OK' : 'ŠPATNĚ'}! ${status === 'ok' ? '🎉' : '😞'}`);
             });
-
-            database.ref(`actualResults/${roundIndex}/${matchIndex}`).set({ home: homeScore, away: awayScore, result: actualResult });
-            showToast('Zápas vyhodnocen! 🎉');
         }
 
         // Funkce pro aktualizaci celkové sázky
@@ -596,91 +604,57 @@
 
         // Funkce pro aktualizaci bodů
         function updatePoints(username, points) {
-            const pointsElement = document.getElementById(`points-${username}`);
-            const currentPoints = parseInt(pointsElement.textContent) || 0;
-            const newPoints = currentPoints + points;
-            pointsElement.textContent = newPoints;
-            database.ref(`points/${username}`).set(newPoints);
-            showToast(`${username} získal +${points} bodů! 🏆`);
+            database.ref(`points/${username}`).once('value', (snap) => {
+                const currentPoints = snap.val() || 0;
+                const newPoints = currentPoints + points;
+                database.ref(`points/${username}`).set(newPoints);
+            });
         }
 
-        // Funkce pro vyhodnocení kola
-        function evaluateRound(roundIndex) {
-            database.ref(`scores/${roundIndex}`).once('value', (scoreSnap) => {
-                const scores = scoreSnap.val();
-                let allEvaluated = true;
-                for (const matchIndex in scores) {
-                    if (!scores[matchIndex] || !scores[matchIndex].home || !scores[matchIndex].away) {
-                        allEvaluated = false;
-                        break;
+        // Funkce pro generování QR v profilu
+        function generateQR() {
+            const username = sessionStorage.getItem('currentPlayer');
+            database.ref('points').once('value', (pointsSnap) => {
+                const points = pointsSnap.val() || {};
+                let maxPoints = -1;
+                let winners = [];
+                Object.keys(points).forEach(user => {
+                    const userPoints = points[user] || 0;
+                    if (userPoints > maxPoints) {
+                        maxPoints = userPoints;
+                        winners = [user];
+                    } else if (userPoints === maxPoints) {
+                        winners.push(user);
                     }
-                }
-                if (!allEvaluated) {
-                    showToast('Nejdříve vyhodnoťte všechny zápasy v kole! ⚠️');
+                });
+
+                if (!winners.includes(username)) {
+                    showToast('Nejsi vítěz, QR nelze generovat! 😞');
                     return;
                 }
 
-                database.ref('points').once('value', (pointsSnap) => {
-                    const points = pointsSnap.val() || {};
-                    const roundResultDiv = document.getElementById('round-results');
+                database.ref('totalBets').once('value', (betsSnap) => {
+                    let totalPool = 0;
+                    const totalBets = betsSnap.val() || {};
+                    Object.values(totalBets).forEach(bet => totalPool += bet || 0);
 
-                    database.ref('bets').once('value', (betSnap) => {
-                        const bets = betSnap.val() || {};
-                        let totalPool = 0;
-                        for (const username in bets) {
-                            if (bets[username] && bets[username][roundIndex]) {
-                                for (const match in bets[username][roundIndex]) {
-                                    totalPool += parseInt(bets[username][roundIndex][match]) || 0;
-                                }
+                    const winnings = totalPool / winners.length;
+
+                    database.ref(`profiles/${username}/account`).once('value', (accountSnap) => {
+                        const account = accountSnap.val() || '123456-7890123456';
+                        const qrContainer = document.getElementById('qr-container');
+                        qrContainer.innerHTML = `<h5>QR kód pro tvou výhru</h5>`;
+                        qrContainer.style.display = 'block';
+
+                        const paymentDetails = `SPD*1.0*ACC:${account}*AM:${winnings.toFixed(2)}*CC:CZK*MSG:Vyhra od ${username}`;
+                        QRCode.toCanvas(document.createElement('canvas'), paymentDetails, { width: 200 }, (error, canvas) => {
+                            if (error) {
+                                showToast('Chyba při generování QR kódu! ❌');
+                                return;
                             }
-                        }
-
-                        let maxPoints = -1;
-                        let winners = [];
-                        for (const username in points) {
-                            const userPoints = points[username] || 0;
-                            if (userPoints > maxPoints) {
-                                maxPoints = userPoints;
-                                winners = [username];
-                            } else if (userPoints === maxPoints) {
-                                winners.push(username);
-                            }
-                        }
-
-                        const winnerText = winners.length === 0 ? 'Nikdo (remíza)' : winners.join(', ');
-                        const winnings = winners.length === 0 ? 0 : totalPool / winners.length;
-
-                        roundResultDiv.innerHTML = `
-                            <div class="card">
-                                <div class="card-body text-center">
-                                    <h3>Výsledek ${roundIndex + 1}. kola 🏆</h3>
-                                    <p>Vítěz: ${winnerText} 🎊</p>
-                                    <p>Výhra na hráče: ${winnings.toFixed(2)} Kč 💰</p>
-                                </div>
-                            </div>
-                        `;
-
-                        if (winners.length > 0) {
-                            winners.forEach(winner => {
-                                database.ref(`profiles/${winner}/account`).once('value', (accountSnap) => {
-                                    const account = accountSnap.val() || '123456-7890123456';
-                                    const qrCodeDiv = document.createElement('div');
-                                    qrCodeDiv.className = 'qr-code';
-                                    qrCodeDiv.innerHTML = `<h5>QR kód pro ${winner}</h5>`;
-                                    roundResultDiv.appendChild(qrCodeDiv);
-
-                                    const paymentDetails = `SPD*1.0*ACC:${account}*AM:${winnings.toFixed(2)}*CC:CZK*MSG:Vyhra za ${roundIndex + 1}. kolo od ${winner}`;
-                                    QRCode.toCanvas(document.createElement('canvas'), paymentDetails, { width: 200 }, (error, canvas) => {
-                                        if (error) {
-                                            showToast('Chyba při generování QR kódu! ❌');
-                                            return;
-                                        }
-                                        qrCodeDiv.appendChild(canvas);
-                                        showToast(`QR kód pro ${winner} vygenerován! 📱`);
-                                    });
-                                });
-                            });
-                        }
+                            qrContainer.appendChild(canvas);
+                            showToast(`QR kód vygenerován! 📱`);
+                        });
                     });
                 });
             });
@@ -691,8 +665,8 @@
             database.ref('points').set({});
             database.ref('totalBets').set({});
             database.ref('bets').remove();
-            database.ref('scores').remove();
-            database.ref('actualResults').remove();
+            database.ref('evaluations').remove();
+            database.ref('tips').remove();
             database.ref('users').once('value', (snapshot) => {
                 const users = snapshot.val() || {};
                 Object.keys(users).forEach(username => {
@@ -700,12 +674,12 @@
                     document.getElementById(`bet-${username}`).textContent = '0';
                 });
             });
-            document.getElementById('round-results').innerHTML = '';
             showToast('Body a sázky resetovány! 🔄');
         }
 
         // Inicializace aplikace
         async function init() {
+            const currentPlayer = sessionStorage.getItem('currentPlayer');
             const rounds = await loadMatches();
             if (rounds.length === 0) {
                 document.getElementById('matches-container').innerHTML = '<p class="text-center">Žádné zápasy nenalezeny. 😔</p>';
@@ -716,8 +690,7 @@
             database.ref('users').on('value', (snapshot) => {
                 const users = snapshot.val() || {};
                 renderPlayerTable(users);
-                renderProfiles(users);
-                renderMatches(rounds, users);
+                renderMatches(rounds, users, currentPlayer);
 
                 // Načtení bodů
                 database.ref('points').on('value', (pointsSnapshot) => {
@@ -762,19 +735,44 @@
                     });
                 });
 
-                // Načtení skóre
-                database.ref('scores').on('value', (scoresSnapshot) => {
-                    const scores = scoresSnapshot.val() || {};
-                    for (const roundIndex in scores) {
-                        for (const matchIndex in scores[roundIndex]) {
-                            const homeInput = document.getElementById(`home-score-${roundIndex}-${matchIndex}`);
-                            const awayInput = document.getElementById(`away-score-${roundIndex}-${matchIndex}`);
-                            if (homeInput && awayInput) {
-                                homeInput.value = scores[roundIndex][matchIndex].home || '';
-                                awayInput.value = scores[roundIndex][matchIndex].away || '';
+                // Načtení vyhodnocení
+                database.ref('evaluations').on('value', (evalSnapshot) => {
+                    const evaluations = evalSnapshot.val() || {};
+                    Object.keys(users).forEach(username => {
+                        if (evaluations[username]) {
+                            for (const roundIndex in evaluations[username]) {
+                                for (const matchIndex in evaluations[username][roundIndex]) {
+                                    const evalCell = document.getElementById(`${username}-eval-${roundIndex}-${matchIndex}`);
+                                    if (evalCell) {
+                                        const status = evaluations[username][roundIndex][matchIndex];
+                                        if (status) {
+                                            evalCell.innerHTML = `<span class="evaluation-status">${status === 'ok' ? 'OK ✅' : 'ŠPATNĚ ❌'}</span>`;
+                                        } else if (username === currentPlayer) {
+                                            evalCell.innerHTML = `
+                                                <button class="btn btn-success evaluation-btn" onclick="evaluateTip('${username}', ${roundIndex}, ${matchIndex}, 'ok')">OK</button>
+                                                <button class="btn btn-danger evaluation-btn" onclick="evaluateTip('${username}', ${roundIndex}, ${matchIndex}, 'spatne')">ŠPATNĚ</button>
+                                            `;
+                                        } else {
+                                            evalCell.innerHTML = '<span class="evaluation-status">Nevyhodnoceno</span>';
+                                        }
+                                    }
+                                }
                             }
+                        } else if (username === currentPlayer) {
+                            // Pokud žádné vyhodnocení, přidat tlačítka pro všechny zápasy
+                            rounds.forEach((round, rIdx) => {
+                                round.matches.forEach((match, mIdx) => {
+                                    const evalCell = document.getElementById(`${username}-eval-${rIdx}-${mIdx}`);
+                                    if (evalCell && !evalCell.innerHTML) {
+                                        evalCell.innerHTML = `
+                                            <button class="btn btn-success evaluation-btn" onclick="evaluateTip('${username}', ${rIdx}, ${mIdx}, 'ok')">OK</button>
+                                            <button class="btn btn-danger evaluation-btn" onclick="evaluateTip('${username}', ${rIdx}, ${mIdx}, 'spatne')">ŠPATNĚ</button>
+                                        `;
+                                    }
+                                });
+                            });
                         }
-                    }
+                    });
                 });
 
                 // Načtení celkových sázek
@@ -785,15 +783,10 @@
                     });
                 });
 
-                // Načtení profilů (účty)
-                database.ref('profiles').on('value', (profilesSnapshot) => {
-                    const profiles = profilesSnapshot.val() || {};
-                    Object.keys(users).forEach(username => {
-                        const accountInput = document.getElementById(`account-${username}`);
-                        if (accountInput && profiles[username] && profiles[username].account) {
-                            accountInput.value = profiles[username].account;
-                        }
-                    });
+                // Načtení profilu (jen pro aktuálního)
+                database.ref(`profiles/${currentPlayer}`).on('value', (profileSnapshot) => {
+                    const profile = profileSnapshot.val() || {};
+                    document.getElementById('my-account').value = profile.account || '';
                 });
             });
         }
