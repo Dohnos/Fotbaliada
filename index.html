@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚽ Fotbalové Tipy | Soutěž</title>
+    <title>⚽ Fotbalové Tipy | Vítězná Aplikace</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -246,7 +246,6 @@
             if (!currentPlayer) {
                 document.getElementById('loading-screen').classList.add('d-none');
                 document.getElementById('login-page').classList.remove('d-none');
-                introModal = new bootstrap.Modal(document.getElementById('introModal'));
                 return;
             }
             
@@ -259,7 +258,6 @@
                 allMatches = await loadMatchesFromFile();
                 setupFirebaseListeners();
                 showSection('dashboard');
-                resetModal = new bootstrap.Modal(document.getElementById('resetConfirmModal'));
                 document.getElementById('loading-screen').classList.add('d-none');
                 document.getElementById('main-app').classList.remove('d-none');
             } catch (error) {
@@ -271,7 +269,10 @@
             database.ref().on('value', snapshot => {
                 const data = snapshot.val() || {};
                 allUsers = data.users || {};
-                renderAllSections(data);
+                const activeSection = document.querySelector('.app-section:not(.d-none)');
+                if (activeSection) {
+                    renderAllSections(data);
+                }
             }, handleFirebaseError);
         };
         
@@ -389,44 +390,14 @@
             html += '<div class="accordion" id="roundsAccordion">';
 
             allMatches.forEach((round, roundIndex) => {
-                html += `
-                    <div class="accordion-item mb-3">
-                        <h2 class="accordion-header"><button class="accordion-button ${roundIndex === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${roundIndex}">${round.round}</button></h2>
-                        <div id="collapse${roundIndex}" class="accordion-collapse collapse ${roundIndex === 0 ? 'show' : ''}" data-bs-parent="#roundsAccordion"><div class="accordion-body">`;
+                html += `<div class="accordion-item mb-3"><h2 class="accordion-header"><button class="accordion-button ${roundIndex === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${roundIndex}">${round.round}</button></h2><div id="collapse${roundIndex}" class="accordion-collapse collapse ${roundIndex === 0 ? 'show' : ''}" data-bs-parent="#roundsAccordion"><div class="accordion-body">`;
                 round.matches.forEach(match => {
                     const officialResult = matchResults[match.id], isEvaluated = officialResult !== undefined;
                     const myTip = allTips[currentPlayer]?.[match.id], myBet = allBets[currentPlayer]?.[match.id] ?? '';
-                    html += `<div class="card mb-3"><div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                                <h5 class="mb-0"><i class="fas fa-futbol me-2"></i>${match.name}</h5>
-                                ${isEvaluated ? `<span class="badge bg-primary-subtle text-primary-emphasis rounded-pill p-2">Výsledek: ${officialResult}</span>` : ''}
-                            </div>
-                            <div class="p-3 rounded my-tip-row">
-                                <div class="row align-items-center gx-3">
-                                    <div class="col-12 col-md-5 mb-2 mb-md-0">
-                                        <div class="btn-group w-100 tip-btn-group" role="group">
-                                            <button type="button" class="btn ${myTip === 1 ? 'active' : ''}" onclick="saveTip('${match.id}', 1)" ${isEvaluated ? 'disabled' : ''}>1</button>
-                                            <button type="button" class="btn ${myTip === 0 ? 'active' : ''}" onclick="saveTip('${match.id}', 0)" ${isEvaluated ? 'disabled' : ''}>0</button>
-                                            <button type="button" class="btn ${myTip === 2 ? 'active' : ''}" onclick="saveTip('${match.id}', 2)" ${isEvaluated ? 'disabled' : ''}>2</button>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 col-md-7">
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" placeholder="Sázka" min="0" max="1000" step="10" value="${myBet}" onchange="saveBet('${match.id}', this.value)" ${isEvaluated ? 'disabled' : ''}>
-                                            <span class="input-group-text">Kč</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <small class="text-muted mt-3 d-block">Tipy ostatních hráčů:</small>`;
-                    
+                    html += `<div class="card mb-3"><div class="card-body"><div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><h5 class="mb-0"><i class="fas fa-futbol me-2"></i>${match.name}</h5>${isEvaluated ? `<span class="badge bg-primary-subtle text-primary-emphasis rounded-pill p-2">Výsledek: ${officialResult}</span>` : ''}</div><div class="p-3 rounded my-tip-row"><div class="row align-items-center gx-3"><div class="col-12 col-md-5 mb-2 mb-md-0"><div class="btn-group w-100 tip-btn-group" role="group"><button type="button" class="btn ${myTip === 1 ? 'active' : ''}" onclick="saveTip('${match.id}', 1)" ${isEvaluated ? 'disabled' : ''}>1</button><button type="button" class="btn ${myTip === 0 ? 'active' : ''}" onclick="saveTip('${match.id}', 0)" ${isEvaluated ? 'disabled' : ''}>0</button><button type="button" class="btn ${myTip === 2 ? 'active' : ''}" onclick="saveTip('${match.id}', 2)" ${isEvaluated ? 'disabled' : ''}>2</button></div></div><div class="col-12 col-md-7"><div class="input-group"><input type="number" class="form-control" placeholder="Sázka" min="0" max="1000" step="10" value="${myBet}" onchange="saveBet('${match.id}', this.value)" ${isEvaluated ? 'disabled' : ''}><span class="input-group-text">Kč</span></div></div></div></div><small class="text-muted mt-3 d-block">Tipy ostatních hráčů:</small>`;
                     Object.keys(allUsers).filter(u => u !== currentPlayer).forEach(username => {
                         const tip = allTips[username]?.[match.id] ?? '-', bet = allBets[username]?.[match.id] ?? '0', evaluation = allEvals[username]?.[match.id] ?? 'nevyhodnoceno';
-                        html += `<div class="d-flex justify-content-between align-items-center p-2 mt-2 rounded other-tip-row">
-                                <span><i class="fas fa-user me-2 opacity-50"></i>${username}</span>
-                                <div class="d-flex align-items-center gap-3">
-                                    <span class="fw-bold">Tip: ${tip}</span><span>${bet} Kč</span><span class="evaluation-status-display status-${evaluation}">${evaluation.toUpperCase()}</span>
-                                </div></div>`;
+                        html += `<div class="d-flex justify-content-between align-items-center p-2 mt-2 rounded other-tip-row"><span><i class="fas fa-user me-2 opacity-50"></i>${username}</span><div class="d-flex align-items-center gap-3"><span class="fw-bold">Tip: ${tip}</span><span>${bet} Kč</span><span class="evaluation-status-display status-${evaluation}">${evaluation.toUpperCase()}</span></div></div>`;
                     });
                     html += `</div></div>`;
                 });
@@ -465,7 +436,6 @@
                 });
             });
             if (unevaluatedMatchesHTML === '') unevaluatedMatchesHTML = '<p class="text-muted">Všechny zápasy jsou vyhodnoceny.</p>';
-            
             document.getElementById('admin-section').innerHTML = `<div class="admin-controls card p-4"><h2 class="mb-4"><i class="fas fa-cogs me-2"></i>Administrace</h2><div class="card mb-4"><div class="card-body p-4"><h3><i class="fas fa-check-double me-2"></i>Vyhodnocení zápasů</h3>${unevaluatedMatchesHTML}</div></div><div class="card"><div class="card-body p-4"><h3><i class="fas fa-redo-alt me-2"></i>Měsíční Reset</h3><p class="text-muted">Resetuje body, sázky a vyhodnocení. Tuto akci nelze vrátit!</p><button class="btn btn-danger" onclick="showResetModal()"><i class="fas fa-exclamation-triangle me-1"></i>Resetovat Soutěž</button></div></div></div>`;
         };
         
@@ -522,7 +492,6 @@
              const accountSnap = await database.ref(`profiles/${targetUser}/account`).once('value');
              const account = accountSnap.val();
              if (!account) return showToast(`Účet ${isWithdrawal ? 'pro výhru' : 'administrátora'} není nastaven!`, 'danger');
-             
              const qrContainer = document.getElementById('qr-container'), canvas = document.getElementById('qr-canvas');
              const paymentDetails = `SPD*1.0*ACC:${account.replace('-', '')}*AM:${amount.toFixed(2)}*CC:CZK*MSG:${msg}`;
              document.getElementById('qr-title').textContent = title;
@@ -543,12 +512,10 @@
                 .then(() => { resetModal.hide(); showToast('Soutěž byla úspěšně resetována!', 'success'); })
                 .catch(handleFirebaseError);
         };
-        document.getElementById('confirmResetBtn').addEventListener('click', confirmReset);
-
+        
         const adminEvaluateMatch = async (matchId, result) => {
             await database.ref(`matchResults/${matchId}`).set(result);
-            const tipsSnapshot = await database.ref('tips').once('value');
-            const allTips = tipsSnapshot.val() || {};
+            const tipsSnapshot = await database.ref('tips').once('value'); const allTips = tipsSnapshot.val() || {};
             const updates = {};
             const pointPromises = Object.keys(allUsers).map(username => {
                 const userTip = allTips[username]?.[matchId];
@@ -559,8 +526,7 @@
                     } else updates[`/evaluations/${username}/${matchId}`] = 'spatne';
                 } return Promise.resolve();
             });
-            await database.ref().update(updates);
-            await Promise.all(pointPromises);
+            await database.ref().update(updates); await Promise.all(pointPromises);
             showToast('Zápas úspěšně vyhodnocen a body připsány!', 'success');
         };
         
@@ -568,9 +534,7 @@
         const setupNavigation = () => {
             const navLinks = document.querySelectorAll('.sidebar-nav a, .mobile-nav a');
             navLinks.forEach(link => link.addEventListener('click', e => {
-                e.preventDefault();
-                const section = e.currentTarget.dataset.section;
-                showSection(section);
+                e.preventDefault(); const section = e.currentTarget.dataset.section; showSection(section);
                 navLinks.forEach(l => l.classList.remove('active'));
                 document.querySelectorAll(`a[data-section="${section}"]`).forEach(l => l.classList.add('active'));
             }));
@@ -588,19 +552,21 @@
             return `<div class="leaderboard-avatar" style="background-color: ${color}">${initial}</div>`;
         };
         const showToast = (message, type = 'info') => {
-            const toastContainer = document.querySelector('.toast-container');
-            const toastId = `toast-${Date.now()}`;
+            const toastContainer = document.querySelector('.toast-container'); const toastId = `toast-${Date.now()}`;
             const toastHTML = `<div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true"><div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>`;
-            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-            const toastEl = document.getElementById(toastId);
-            const toast = new bootstrap.Toast(toastEl);
-            toast.show();
-            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML); const toastEl = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastEl); toast.show(); toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
         };
         const handleFirebaseError = (error) => { console.error("Firebase Error:", error); showToast(`Chyba databáze: ${error.message}`, 'danger'); };
         
         // --- ON PAGE LOAD ---
-        window.onload = () => initApp();
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            const confirmBtn = document.getElementById('confirmResetBtn');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', confirmReset);
+            }
+        });
 
     </script>
 </body>
