@@ -7,7 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         :root {
             --bg-color: #f4f7fc;
@@ -32,7 +31,6 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            display: flex;
         }
 
         h1, h2, h3, h4, h5 { font-family: 'Oswald', sans-serif; font-weight: 700; color: var(--heading-color); }
@@ -44,16 +42,20 @@
         /* --- Login & Loading --- */
         .full-screen-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            background-color: var(--bg-color); z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background-color: var(--bg-color); z-index: 2000; padding: 1rem;
         }
         .login-card {
             background: var(--card-bg-color); padding: 40px; border-radius: var(--border-radius);
             box-shadow: var(--shadow); max-width: 450px; width: 100%;
         }
+        .intro-section { max-width: 900px; margin-top: 2rem; }
+        .intro-card { text-align: center; padding: 1.5rem; }
+        .intro-card .icon { font-size: 2rem; color: var(--accent-color); margin-bottom: 1rem; }
         .spinner-border { color: var(--accent-color); }
 
         /* --- Main Layout & Navigation --- */
+        #main-app { display: flex; }
         .sidebar {
             width: var(--sidebar-width); height: 100vh; background-color: var(--card-bg-color);
             border-right: 1px solid var(--border-color); position: fixed; top: 0; left: 0;
@@ -70,13 +72,11 @@
         .sidebar-nav a i { width: 30px; font-size: 1.1rem; }
         .sidebar-footer { margin-top: auto; }
 
-        .mobile-nav, .content { display: none; }
-
-        .content.active { display: block; }
+        .mobile-nav { display: none; }
         .content { flex: 1; margin-left: var(--sidebar-width); padding: 2rem; }
         
         @media (max-width: 992px) {
-            .sidebar { transform: translateX(-100%); display: none; }
+            .sidebar { display: none; }
             .content { margin-left: 0; padding-bottom: calc(var(--mobile-nav-height) + 1rem); }
             .mobile-nav {
                 display: flex; justify-content: space-around; align-items: center;
@@ -119,12 +119,6 @@
         .status-ok { background-color: rgba(25, 135, 84, 0.1); color: var(--success-color); }
         .status-spatne { background-color: rgba(220, 53, 69, 0.1); color: var(--danger-color); }
         .status-nevyhodnoceno { background-color: #f0f0f0; color: var(--muted-text-color); }
-        
-        /* --- Modal & QR --- */
-        .modal-content { border-radius: var(--border-radius); border: none; }
-        .intro-step { display: flex; align-items: flex-start; margin-bottom: 1.5rem; }
-        .intro-step .icon { font-size: 1.5rem; color: var(--accent-color); margin-right: 1rem; width: 30px; text-align: center; }
-        #qr-canvas { border: 5px solid var(--bg-color); border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -137,13 +131,20 @@
             <p class="lead mb-4">Měsíční tipovací soutěž</p>
             <div class="mb-3"><input type="text" class="form-control" id="username" placeholder="Uživatelské jméno"></div>
             <div class="mb-4"><input type="password" class="form-control" id="pin" placeholder="PIN (4 číslice)" maxlength="4" inputmode="numeric"></div>
-            <button class="btn btn-primary w-100 mb-2" onclick="login()">Přihlásit se <i class="fas fa-key"></i></button>
-            <button class="btn btn-outline-secondary w-100 mb-3" onclick="register()">Registrovat se <i class="fas fa-user-plus"></i></button>
-            <a href="#" class="link-secondary small" data-bs-toggle="modal" data-bs-target="#introModal">Jak to funguje?</a>
+            <button class="btn btn-primary w-100 mb-2" id="loginBtn" onclick="login()"><span class="btn-text">Přihlásit se</span> <i class="fas fa-key"></i></button>
+            <button class="btn btn-outline-secondary w-100" id="registerBtn" onclick="register()"><span class="btn-text">Registrovat se</span> <i class="fas fa-user-plus"></i></button>
+        </div>
+        <div class="intro-section container">
+            <h3 class="text-center mb-4">Jak to funguje?</h3>
+            <div class="row">
+                <div class="col-md-4 mb-3"><div class="intro-card"><div class="icon"><i class="fas fa-bullseye"></i></div><h5>1. Tipuj a sbírej body</h5><p class="text-muted small">Za každý správný tip získáš 3 body. Cílem je mít jich co nejvíce.</p></div></div>
+                <div class="col-md-4 mb-3"><div class="intro-card"><div class="icon"><i class="fas fa-coins"></i></div><h5>2. Vsaď si a tvoř bank</h5><p class="text-muted small">Všechny sázky od všech hráčů se sčítají a tvoří celkový "bank", o který se hraje.</p></div></div>
+                <div class="col-md-4 mb-3"><div class="intro-card"><div class="icon"><i class="fas fa-trophy"></i></div><h5>3. Staň se vítězem</h5><p class="text-muted small">Hráč s nejvíce body vyhrává celý bank. Při shodě se výhra dělí.</p></div></div>
+            </div>
         </div>
     </div>
 
-    <div id="main-app" class="d-none w-100">
+    <div id="main-app" class="d-none">
         <!-- Desktop Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header"><h3><i class="fa-solid fa-futbol text-primary"></i> Fotbalové Tipy</h3></div>
@@ -181,9 +182,6 @@
     </div>
 
     <!-- Modals & Toasts -->
-    <div class="modal fade" id="introModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header border-0"><h3 class="modal-title">Vítejte ve Fotbalových Tipech!</h3><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4"><div class="intro-step"><div class="icon"><i class="fas fa-bullseye"></i></div><div><h5>1. Tipujte a sbírejte body</h5><p class="text-muted">Za každý správně tipnutý výsledek zápasu (1 - výhra domácích, 0 - remíza, 2 - výhra hostů) získáte 3 body. Cílem je nasbírat co nejvíce bodů.</p></div></div><div class="intro-step"><div class="icon"><i class="fas fa-coins"></i></div><div><h5>2. Vsaďte si a tvořte bank</h5><p class="text-muted">Ke každému tipu můžete přidat libovolnou sázku v Kč. Všechny sázky od všech hráčů se sčítají a tvoří celkový "bank", o který se hraje.</p></div></div><div class="intro-step"><div class="icon"><i class="fas fa-trophy"></i></div><div><h5>3. Staňte se vítězem</h5><p class="text-muted mb-0">Hráč s nejvyšším počtem bodů na konci soutěže vyhrává celý bank. Pokud má více hráčů stejný počet bodů, bank se mezi ně dělí rovným dílem.</p></div></div></div></div></div>
-    </div>
     <div class="modal fade" id="resetConfirmModal" tabindex="-1">
          <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header border-0"><h5 class="modal-title">Opravdu resetovat soutěž?</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>Tato akce je nevratná. Všechny body, sázky a vyhodnocení budou trvale smazány.</p></div><div class="modal-footer border-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušit</button><button type="button" class="btn btn-danger" id="confirmResetBtn">Ano, resetovat</button></div></div></div>
     </div>
@@ -206,38 +204,66 @@
         const ADMIN_USERNAME = 'kuba';
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        let currentPlayer = null, allUsers = {}, allMatches = [], resetModal, introModal;
+        let currentPlayer = null, allUsers = {}, allMatches = [], resetModal;
 
         // --- AUTH & INIT ---
-        function register() {
+        async function register() {
+            const btn = document.getElementById('registerBtn');
+            toggleButtonState(btn, true, 'Registruji...');
             const username = document.getElementById('username').value.trim().toLowerCase();
             const pin = document.getElementById('pin').value.trim();
-            if (username.length < 3) return showToast('Jméno musí mít alespoň 3 znaky!', 'danger');
-            if (!/^\d{4}$/.test(pin)) return showToast('PIN musí být 4 číslice!', 'danger');
+            if (username.length < 3) {
+                showToast('Jméno musí mít alespoň 3 znaky!', 'danger');
+                toggleButtonState(btn, false);
+                return;
+            }
+            if (!/^\d{4}$/.test(pin)) {
+                showToast('PIN musí být 4 číslice!', 'danger');
+                toggleButtonState(btn, false);
+                return;
+            }
             
-            database.ref(`users/${username}`).once('value', snapshot => {
-                if (snapshot.exists()) return showToast('Uživatel s tímto jménem již existuje!', 'danger');
-                
-                database.ref(`users/${username}`).set({ pin, registeredAt: new Date().toISOString() });
-                sessionStorage.setItem('currentPlayer', username);
-                showToast(`Registrace úspěšná, vítej ${username}! 🎉`, 'success');
-                initApp();
-            }).catch(handleFirebaseError);
+            try {
+                const snapshot = await database.ref(`users/${username}`).once('value');
+                if (snapshot.exists()) {
+                    showToast('Uživatel s tímto jménem již existuje!', 'danger');
+                } else {
+                    await database.ref(`users/${username}`).set({ pin, registeredAt: new Date().toISOString() });
+                    sessionStorage.setItem('currentPlayer', username);
+                    showToast(`Registrace úspěšná, vítej ${username}! 🎉`, 'success');
+                    await initApp();
+                }
+            } catch (error) {
+                handleFirebaseError(error);
+            } finally {
+                toggleButtonState(btn, false);
+            }
         }
 
-        function login() {
+        async function login() {
+            const btn = document.getElementById('loginBtn');
+            toggleButtonState(btn, true, 'Přihlašuji...');
             const username = document.getElementById('username').value.trim().toLowerCase();
             const pin = document.getElementById('pin').value.trim();
-            if (!username || !pin) return showToast('Zadejte jméno a PIN.', 'warning');
+            if (!username || !pin) {
+                showToast('Zadejte jméno a PIN.', 'warning');
+                toggleButtonState(btn, false);
+                return;
+            }
 
-            database.ref(`users/${username}/pin`).once('value', snapshot => {
+            try {
+                const snapshot = await database.ref(`users/${username}/pin`).once('value');
                 if (snapshot.val() === pin) {
                     sessionStorage.setItem('currentPlayer', username);
-                    initApp();
+                    await initApp();
                 } else {
                     showToast('Špatné jméno nebo PIN!', 'danger');
                 }
-            }).catch(handleFirebaseError);
+            } catch (error) {
+                handleFirebaseError(error);
+            } finally {
+                toggleButtonState(btn, false);
+            }
         }
         function logout() { sessionStorage.removeItem('currentPlayer'); location.reload(); }
 
@@ -248,6 +274,9 @@
                 document.getElementById('login-page').classList.remove('d-none');
                 return;
             }
+            
+            document.getElementById('login-page').classList.add('d-none');
+            document.getElementById('loading-screen').classList.remove('d-none');
             
             document.getElementById('logged-in-user').textContent = currentPlayer;
             if (currentPlayer === ADMIN_USERNAME) document.getElementById('admin-nav-item').classList.remove('d-none');
@@ -406,20 +435,7 @@
         
         function renderProfile(data) {
             const account = data.profiles?.[currentPlayer]?.account || '';
-            const points = data.points || {}, totalBets = data.totalBets || {};
-            let isWinner = false, winnings = 0;
-
-            if (Object.keys(points).length > 0) {
-                 let maxPoints = Math.max(...Object.values(points));
-                 if (maxPoints > 0 && points[currentPlayer] === maxPoints) {
-                     const winners = Object.keys(points).filter(u => points[u] === maxPoints);
-                     const totalPool = Object.values(totalBets).reduce((sum, bet) => sum + bet, 0);
-                     winnings = winners.length > 0 ? totalPool / winners.length : 0;
-                     isWinner = winnings > 0;
-                 }
-            }
-
-            document.getElementById('profile-section').innerHTML = `<h2 class="mb-4">Můj profil</h2><div class="row"><div class="col-lg-6"><div class="card"><div class="card-body p-4"><h3><i class="fas fa-address-card me-2"></i>Osobní údaje</h3><div class="mb-3"><label for="my-account" class="form-label">Číslo účtu (pro výhry):</label><input type="text" class="form-control" id="my-account" value="${account}" placeholder="123456-7890123456" maxlength="24"></div><div class="mb-3"><label for="my-pin" class="form-label">Změna PIN (nový 4-místný PIN):</label><input type="password" class="form-control" id="my-pin" placeholder="••••" maxlength="4"></div><button class="btn btn-primary" onclick="saveProfile()"><i class="fas fa-save me-1"></i>Uložit profil</button></div></div></div><div class="col-lg-6"><div class="card"><div class="card-body p-4"><h3><i class="fas fa-money-check-alt me-2"></i>Platby</h3><p class="text-muted">Zde můžete spravovat své platby.</p><button class="btn btn-success w-100 mb-2" onclick="generateDepositQR()"><i class="fas fa-arrow-down me-2"></i>Zaplatit sázky (QR)</button><button class="btn btn-warning w-100" onclick="generateWithdrawalQR()" ${!isWinner ? 'disabled' : ''}><i class="fas fa-arrow-up me-2"></i>Vybrat výhru ${isWinner ? `(${winnings.toLocaleString('cs-CZ')} Kč)` : ''} (QR)</button>${!isWinner ? '<small class="d-block text-center mt-2 text-muted">Tlačítko pro výběr výhry se aktivuje, jakmile se stanete vítězem.</small>' : ''}<div id="qr-container" class="text-center mt-3 d-none"><h5 id="qr-title"></h5><canvas id="qr-canvas"></canvas><p class="mt-2 text-muted small" id="qr-details"></p></div></div></div></div></div>`;
+            document.getElementById('profile-section').innerHTML = `<h2 class="mb-4">Můj profil</h2><div class="row"><div class="col-lg-8"><div class="card"><div class="card-body p-4"><h3><i class="fas fa-address-card me-2"></i>Osobní údaje</h3><div class="mb-3"><label for="my-account" class="form-label">Číslo účtu (pro případné výhry):</label><input type="text" class="form-control" id="my-account" value="${account}" placeholder="123456-7890123456" maxlength="24"></div><div class="mb-3"><label for="my-pin" class="form-label">Změna PIN (nový 4-místný PIN):</label><input type="password" class="form-control" id="my-pin" placeholder="••••" maxlength="4"></div><button class="btn btn-primary" onclick="saveProfile()"><i class="fas fa-save me-1"></i>Uložit profil</button></div></div></div></div>`;
         }
         
         function renderAdminPanel(data) {
@@ -467,46 +483,13 @@
             } else showToast('Nebyly provedeny žádné změny.', 'info');
         }
         
-        async function generateDepositQR() {
-            const myTotalBetSnap = await database.ref(`totalBets/${currentPlayer}`).once('value');
-            const totalBet = myTotalBetSnap.val() || 0;
-            if (totalBet <= 0) return showToast('Nemáte žádnou sázku pro zaplacení.', 'info');
-            showQrCode(`Vklad sázek (${currentPlayer})`, `Vklad ${totalBet.toFixed(2)} Kč`, `Vklad FTB Tipy ${currentPlayer}`, totalBet);
-        }
-        async function generateWithdrawalQR() {
-             const pointsSnap = await database.ref('points').once('value'), totalBetsSnap = await database.ref('totalBets').once('value');
-             const points = pointsSnap.val() || {}, totalBets = totalBetsSnap.val() || {};
-             let maxPoints = Math.max(...Object.values(points).concat([0]));
-             if (maxPoints <= 0 || points[currentPlayer] !== maxPoints) return showToast('Pro výběr musíte být vítěz s kladným skóre.', 'danger');
-             const winners = Object.keys(points).filter(user => points[user] === maxPoints);
-             const totalPool = Object.values(totalBets).reduce((sum, bet) => sum + bet, 0);
-             const winnings = winners.length > 0 ? totalPool / winners.length : 0;
-             if (winnings <= 0) return showToast('Výhra je 0 Kč, nelze vybrat.', 'info');
-             showQrCode('Výběr výhry', `Výhra ${winnings.toFixed(2)} Kč`, `Vyhra FTB Tipy ${currentPlayer}`, winnings, true);
-        }
-        async function showQrCode(title, details, msg, amount, isWithdrawal = false) {
-             const targetUser = isWithdrawal ? currentPlayer : ADMIN_USERNAME;
-             const accountSnap = await database.ref(`profiles/${targetUser}/account`).once('value');
-             const account = accountSnap.val();
-             if (!account) return showToast(`Účet ${isWithdrawal ? 'pro výhru' : 'administrátora'} není nastaven!`, 'danger');
-             const qrContainer = document.getElementById('qr-container'), canvas = document.getElementById('qr-canvas');
-             const paymentDetails = `SPD*1.0*ACC:${account.replace('-', '')}*AM:${amount.toFixed(2)}*CC:CZK*MSG:${msg}`;
-             document.getElementById('qr-title').textContent = title;
-             QRCode.toCanvas(canvas, paymentDetails, { width: 200, margin: 1 }, error => {
-                 if (error) return handleFirebaseError(error);
-                 document.getElementById('qr-details').textContent = `${details} na účet ${account}`;
-                 qrContainer.classList.remove('d-none');
-                 showToast('QR kód úspěšně vygenerován!', 'success');
-             });
-        }
-
-        function showResetModal() { resetModal.show(); }
+        function showResetModal() { if(resetModal) resetModal.show(); }
         function confirmReset() {
             const pathsToRemove = ['points', 'totalBets', 'bets', 'tips', 'evaluations', 'matchResults'];
             const updates = {};
             pathsToRemove.forEach(path => updates[path] = null);
             database.ref().update(updates)
-                .then(() => { resetModal.hide(); showToast('Soutěž byla úspěšně resetována!', 'success'); })
+                .then(() => { if(resetModal) resetModal.hide(); showToast('Soutěž byla úspěšně resetována!', 'success'); })
                 .catch(handleFirebaseError);
         }
         
@@ -540,7 +523,6 @@
             document.querySelectorAll('.app-section').forEach(s => s.classList.add('d-none'));
             const sectionEl = document.getElementById(`${sectionId}-section`);
             sectionEl.classList.remove('d-none');
-            // Re-render data for the newly shown section
             database.ref().once('value', snapshot => renderAllSections(snapshot.val() || {}));
         }
         function generateAvatar(username) {
@@ -557,6 +539,23 @@
             const toast = new bootstrap.Toast(toastEl); toast.show(); toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
         }
         function handleFirebaseError(error) { console.error("Firebase Error:", error); showToast(`Chyba databáze: ${error.message}`, 'danger'); }
+        function toggleButtonState(btn, isLoading, loadingText = '') {
+            if (!btn) return;
+            const btnText = btn.querySelector('.btn-text');
+            const originalText = btnText.textContent;
+            
+            if (isLoading) {
+                btn.disabled = true;
+                btnText.textContent = loadingText;
+                const spinner = document.createElement('i');
+                spinner.className = 'fas fa-spinner fa-spin ms-2';
+                btn.appendChild(spinner);
+            } else {
+                btn.disabled = false;
+                btn.querySelector('.fa-spinner')?.remove();
+                // We don't need to restore text, as it's static in the HTML
+            }
+        }
         
         // --- ON PAGE LOAD ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -564,11 +563,12 @@
             const confirmBtn = document.getElementById('confirmResetBtn');
             if (confirmBtn) confirmBtn.addEventListener('click', confirmReset);
             
-            // Initialize modals after the DOM is ready
             const introModalEl = document.getElementById('introModal');
             if(introModalEl) introModal = new bootstrap.Modal(introModalEl);
+            
+            const resetModalEl = document.getElementById('resetConfirmModal');
+            if(resetModalEl) resetModal = new bootstrap.Modal(resetModalEl);
         });
-
     </script>
 </body>
 </html>
