@@ -1,8 +1,35 @@
-1. KOLO
-AC Sparta Praha vs. SK Slavia Praha
-FC Viktoria Plzeň vs. FC Baník Ostrava
-Bohemians Praha 1905 vs. FK Teplice
+7. KOLO
+AFC Bournemouth vs. Fulham  
+Arsenal vs. West Ham United  
+Aston Villa vs. Burnley  
+Brentford vs. Manchester City  
+Chelsea vs. Liverpool  
+Everton vs. Crystal Palace  
+Leeds United vs. Tottenham Hotspur  
+Manchester United vs. Sunderland  
+Newcastle United vs. Nottingham Forest  
+Wolverhampton Wanderers vs. Brighton & Hove Albion  
 
-2. KOLO
-SK Sigma Olomouc vs. FK Mladá Boleslav
-FK Jablonec vs. FC Hradec Králové
+8. KOLO
+Brighton & Hove Albion vs. Newcastle United  
+Burnley vs. Leeds United  
+Crystal Palace vs. AFC Bournemouth  
+Fulham vs. Arsenal  
+Liverpool vs. Manchester United  
+Manchester City vs. Everton  
+Nottingham Forest vs. Chelsea  
+Sunderland vs. Wolverhampton Wanderers  
+Tottenham Hotspur vs. Aston Villa  
+West Ham United vs. Brentford  
+
+9. KOLO
+AFC Bournemouth vs. Nottingham Forest  
+Arsenal vs. Crystal Palace  
+Aston Villa vs. Manchester City  
+Brentford vs. Liverpool  
+Chelsea vs. Sunderland  
+Everton vs. Tottenham Hotspur  
+Leeds United vs. West Ham United  
+Manchester United vs. Brighton & Hove Albion  
+Newcastle United vs. Fulham  
+Wolverhampton Wanderers vs. Burnley  
