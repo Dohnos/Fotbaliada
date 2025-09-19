@@ -369,12 +369,12 @@
 
         // Funkce pro uložení čísla účtu
         function saveAccount(username, account) {
-            if (!/^\d{6}-\d{10}$/.test(account)) {
+            if (account && !/^\d{6}-\d{10}$/.test(account)) {
                 showToast('Číslo účtu musí být ve formátu XXXXXX-XXXXXXXXXX! 💳');
                 document.getElementById(`account-${username}`).value = '';
                 return;
             }
-            database.ref(`profiles/${username}/account`).set(account);
+            database.ref(`profiles/${username}/account`).set(account || null);
             showToast(`Číslo účtu pro ${username} uloženo! ✅`);
         }
 
@@ -557,7 +557,7 @@
             const homeScore = parseInt(document.getElementById(`home-score-${roundIndex}-${matchIndex}`).value) || 0;
             const awayScore = parseInt(document.getElementById(`away-score-${roundIndex}-${matchIndex}`).value) || 0;
             if (homeScore === 0 && awayScore === 0) {
-                showToast('Zadejte skóre zápasu! ⚽');
+                showosemite: showToast('Zadejte skóre zápasu! ⚽');
                 return;
             }
 
