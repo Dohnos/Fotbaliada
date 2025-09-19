@@ -127,6 +127,12 @@ h1, h2, h3, h4, h5 { font-family: 'Oswald', sans-serif; font-weight: 700; color:
 .table td, .table th { border-color: var(--border-color) !important; color: var(--text-color); vertical-align: middle; padding: 1rem 1.5rem; }
 .table tbody tr:hover { background-color: #f8f9fa; }
 .leaderboard-avatar { width: 40px; height: 40px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: 'Oswald'; }
+.form-streak { color: #fd7e14; margin-left: 8px; font-size: 1.1rem; }
+.leaderboard-team { font-style: italic; color: var(--muted-text-color); font-size: 0.9em; }
+
+@media (max-width: 576px) {
+    .team-col { display: none; }
+}
 
 /* --- Matches Page --- */
 .accordion-button { font-family: 'Oswald'; font-size: 1.2rem; }
@@ -171,3 +177,45 @@ h1, h2, h3, h4, h5 { font-family: 'Oswald', sans-serif; font-weight: 700; color:
     font-size: 0.9rem;
     color: var(--muted-text-color);
 }
+
+/* --- Dashboard --- */
+.competition-progress-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+.progress-circle-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+}
+.progress-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent-color) calc(var(--progress, 0) * 1%), var(--bg-color) 0);
+    transition: --progress 0.5s ease-out;
+}
+.progress-circle-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--card-bg-color);
+    width: 85%;
+    height: 85%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    font-family: 'Oswald';
+    color: var(--heading-color);
+}
+.hot-tip-card {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+    color: #5b2c2e;
+}
+.hot-tip-card h5 { color: #5b2c2e; }
