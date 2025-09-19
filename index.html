@@ -318,22 +318,21 @@
     <script src="https://www.gstatic.com/ejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script>
-        // Firebase konfigurace – vložte svou config zde
-        const firebaseConfig = {
-           const firebaseConfig = {
+// Firebase konfigurace
+const firebaseConfig = {
   apiKey: "AIzaSyB-gLlgyPKNf4z1cfl1Z1N1qu79FvO_3A8",
   authDomain: "ftbapp-ded2c.firebaseapp.com",
+  databaseURL: "https://ftbapp-ded2c-default-rtdb.europe-west1.firebasedatabase.app/",
   projectId: "ftbapp-ded2c",
   storageBucket: "ftbapp-ded2c.firebasestorage.app",
   messagingSenderId: "239337886217",
   appId: "1:239337886217:web:9b67dffaba23d6e86dded8"
 };
-        };
 
-        // Inicializace Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
+// Inicializace Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+        
         // Funkce pro login
         function login() {
             const username = document.getElementById('username').value.trim().toLowerCase();
@@ -778,3 +777,4 @@
     </script>
 </body>
 </html>
+
