@@ -1,720 +1,929 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>⚽ Fotbalové tipy — Měsíční soutěž</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚽ Fotbalové Tipy: Měsíční Soutěž</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
+    <style>
+        :root {
+            --dark-bg-start: #0f0f23;
+            --dark-bg-end: #1a1a2e;
+            --dark-text: #ffffff;
+            --dark-card-bg: rgba(255, 255, 255, 0.08);
+            --dark-card-border: rgba(255, 255, 255, 0.15);
+            --dark-input-bg: rgba(255, 255, 255, 0.15);
+            --dark-input-border: rgba(255, 255, 255, 0.3);
+            --dark-toast-bg: rgba(0, 0, 0, 0.85);
+            --dark-toast-text: #ffffff;
+            --dark-header-color: #ffffff;
 
-  <!-- Tailwind (CDN quick) -->
-  <script src="https://cdn.tailwindcss.com"></script>
+            --light-bg-start: #f0f4f8;
+            --light-bg-end: #d9e2ec;
+            --light-text: #333333;
+            --light-card-bg: rgba(255, 255, 255, 0.95);
+            --light-card-border: rgba(0, 0, 0, 0.08);
+            --light-input-bg: rgba(255, 255, 255, 0.9);
+            --light-input-border: rgba(0, 0, 0, 0.15);
+            --light-toast-bg: rgba(255, 255, 255, 0.95);
+            --light-toast-text: #333333;
+            --light-header-color: #0f0f23;
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet">
+            --primary-gradient: linear-gradient(135deg, #667eea, #764ba2);
+            --success-gradient: linear-gradient(135deg, #43e97b, #38f9d7);
+            --danger-gradient: linear-gradient(135deg, #fa709a, #fee140);
+            --warning-gradient: linear-gradient(135deg, #4facfe, #00f2fe);
+            --info-gradient: linear-gradient(135deg, #00c6fb, #005bea);
+            --secondary-gradient: linear-gradient(135deg, #9599e2, #6265a7);
+        }
 
-  <!-- QR generator -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background 0.3s ease, color 0.3s ease;
+            background: var(--dark-bg-start);
+            background-image: linear-gradient(135deg, var(--dark-bg-start) 0%, var(--dark-bg-end) 100%);
+            color: var(--dark-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        body.light-mode {
+            background: var(--light-bg-start);
+            background-image: linear-gradient(135deg, var(--light-bg-start) 0%, var(--light-bg-end) 100%);
+            color: var(--light-text);
+        }
+        .container-fluid {
+            flex-grow: 1;
+        }
 
-  <!-- Firebase (compat for simpler port from old code) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+        h1, h2, h3, h4, h5 {
+            font-family: 'Oswald', sans-serif;
+            font-weight: 700;
+            color: var(--dark-header-color);
+        }
+        body.light-mode h1, body.light-mode h2, body.light-mode h3, body.light-mode h4, body.light-mode h5 {
+            color: var(--light-header-color);
+        }
 
-  <style>
-    :root {
-      --accent-1: #4facfe;
-      --accent-2: #667eea;
-      --glass: rgba(255,255,255,0.04);
-    }
-    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: linear-gradient(180deg,#071129 0%, #07182a 100%); color: #e6eef8; min-height:100vh; }
-    h1,h2,h3 { font-family: Oswald, Inter, sans-serif; }
-    .glass { background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.04); }
-    /* small niceties for inputs */
-    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    .fade-in { animation: fadeIn .28s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-    /* mobile adjustments */
-    @media (max-width: 640px) {
-      .container-max { padding-left: 1rem; padding-right: 1rem; }
-      .desktop-grid { display:block; }
-    }
-  </style>
+        .login-container {
+            text-align: center;
+            margin-top: 80px;
+            background: var(--dark-card-bg);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--dark-card-border);
+        }
+        body.light-mode .login-container {
+            background: var(--light-card-bg);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--light-card-border);
+        }
+
+        .navbar {
+            background: rgba(15, 15, 35, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        body.light-mode .navbar {
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        .navbar-brand, .nav-link {
+            color: #ffffff !important;
+        }
+        body.light-mode .navbar-brand, body.light-mode .nav-link {
+            color: #0f0f23 !important;
+        }
+        .nav-link.active {
+            font-weight: bold;
+            border-bottom: 2px solid #4facfe;
+        }
+        body.light-mode .nav-link.active {
+            border-bottom: 2px solid #005bea;
+        }
+        
+        #admin-nav-item .nav-link {
+            color: #f5576c !important;
+        }
+        #admin-nav-item .nav-link.active {
+            border-bottom-color: #f5576c;
+        }
+
+        .card {
+            background: var(--dark-card-bg);
+            border: 1px solid var(--dark-card-border);
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            color: var(--dark-text);
+            margin-bottom: 20px;
+        }
+        body.light-mode .card {
+            background: var(--light-card-bg);
+            border: 1px solid var(--light-card-border);
+            color: var(--light-text);
+        }
+
+        .form-control, .tip-input, .bet-input, .account-input, .pin-input {
+            background: var(--dark-input-bg);
+            color: var(--dark-text);
+            border: 1px solid var(--dark-input-border);
+            border-radius: 15px;
+            padding: 8px 12px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        body.light-mode .form-control, body.light-mode .tip-input, body.light-mode .bet-input, body.light-mode .account-input, body.light-mode .pin-input {
+            background: var(--light-input-bg);
+            color: var(--light-text);
+            border: 1px solid var(--light-input-border);
+        }
+        .form-control:focus, .tip-input:focus, .bet-input:focus, .account-input:focus, .pin-input:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.3);
+            background: var(--dark-input-bg);
+            color: var(--dark-text);
+            transform: scale(1.01);
+        }
+        body.light-mode .form-control:focus, body.light-mode .tip-input:focus, body.light-mode .bet-input:focus, body.light-mode .account-input:focus, body.light-mode .pin-input:focus {
+            background: var(--light-input-bg);
+            color: var(--light-text);
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.2);
+        }
+
+        .btn {
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            color: #ffffff;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            color: #ffffff;
+        }
+        .btn-primary { background: var(--primary-gradient); }
+        .btn-success { background: var(--success-gradient); }
+        .btn-danger { background: var(--danger-gradient); }
+        .btn-warning { background: var(--warning-gradient); }
+        .btn-info { background: var(--info-gradient); }
+        .btn-secondary { background: var(--secondary-gradient); }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+        .toast {
+            background: var(--dark-toast-bg);
+            color: var(--dark-toast-text);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 15px;
+        }
+        body.light-mode .toast {
+            background: var(--light-toast-bg);
+            color: var(--light-toast-text);
+        }
+
+        .table {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            background: var(--dark-card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--dark-card-border);
+        }
+        body.light-mode .table {
+            background: var(--light-card-bg);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--light-card-border);
+        }
+        .table thead th {
+            background: var(--info-gradient);
+            color: #ffffff;
+            border: none;
+            padding: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        .table tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        body.light-mode .table tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+        .table td, .table th {
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            color: var(--dark-text);
+            vertical-align: middle;
+        }
+        body.light-mode .table td, body.light-mode .table th {
+            border-color: rgba(0, 0, 0, 0.08) !important;
+            color: var(--light-text);
+        }
+
+        .match-card {
+            background: var(--dark-card-bg);
+            border: 1px solid var(--dark-card-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        body.light-mode .match-card {
+            background: var(--light-card-bg);
+            border: 1px solid var(--light-card-border);
+        }
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        body.light-mode .match-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        .match-score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #4facfe;
+        }
+
+        .player-tip-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        body.light-mode .player-tip-row {
+            background: rgba(0, 0, 0, 0.02);
+        }
+        .player-tip-row span {
+            flex-basis: 120px;
+            flex-shrink: 0;
+            font-weight: 500;
+        }
+        .tip-input, .bet-input {
+            width: 80px;
+            text-align: center;
+            margin: 0;
+        }
+        .evaluation-status-display {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .status-ok { background-color: rgba(67, 233, 123, 0.2); color: #43e97b; }
+        .status-spatne { background-color: rgba(250, 112, 154, 0.2); color: #fa709a; }
+        .status-nevyhodnoceno { background-color: rgba(255, 255, 255, 0.1); color: #ffffff; }
+        body.light-mode .status-nevyhodnoceno { color: #333333; }
+
+        .qr-code-section {
+            background: var(--dark-card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--dark-card-border);
+            text-align: center;
+            margin-top: 20px;
+        }
+        body.light-mode .qr-code-section {
+            background: var(--light-card-bg);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--light-card-border);
+        }
+        .qr-code-section canvas {
+            margin-top: 15px;
+            border: 5px solid var(--dark-card-bg);
+            border-radius: 10px;
+        }
+        body.light-mode .qr-code-section canvas {
+            border: 5px solid var(--light-card-bg);
+        }
+
+        /* Admin specific styles */
+        .admin-controls {
+            background: rgba(255, 0, 0, 0.05);
+            border: 1px solid rgba(255, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.1);
+        }
+        body.light-mode .admin-controls {
+            background: rgba(255, 0, 0, 0.02);
+            border: 1px solid rgba(255, 0, 0, 0.08);
+            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.05);
+        }
+        .admin-controls h3 { color: #f5576c; }
+        body.light-mode .admin-controls h3 { color: #d63384; }
+        
+        .admin-evaluation-buttons .btn {
+            margin-right: 5px;
+            margin-bottom: 5px;
+            min-width: 70px;
+        }
+
+        .spinner-border { width: 1.5rem; height: 1.5rem; vertical-align: middle; }
+
+        @media (max-width: 768px) {
+            .navbar-nav { flex-direction: column; text-align: center; }
+            .navbar-nav .nav-item { margin-bottom: 5px; }
+            .login-container { margin-top: 50px; padding: 20px; }
+            .btn { width: 100%; margin-bottom: 10px; }
+            .player-tip-row { flex-wrap: wrap; justify-content: center; }
+            .player-tip-row span { flex-basis: 100%; text-align: center; margin-bottom: 5px; }
+            .tip-input, .bet-input { width: 100px; }
+            .admin-evaluation-buttons { text-align: center; }
+        }
+    </style>
 </head>
-<body class="antialiased">
-  <div class="max-w-5xl mx-auto container-max p-6">
-    <!-- Header -->
-    <header class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v6M12 22v0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<body>
+    <!-- Login Page -->
+    <div id="login-page" class="container login-container d-flex flex-column align-items-center justify-content-center">
+        <h1>⚽ Fotbalové Tipy: Měsíční Soutěž 🔑</h1>
+        <p class="lead mb-4">Zadejte jméno a PIN pro přihlášení nebo registraci.</p>
+        <div class="col-md-6 col-lg-4">
+            <div class="mb-3">
+                <input type="text" class="form-control" id="username" placeholder="Jméno (min. 3 znaky)">
+            </div>
+            <div class="mb-4">
+                <input type="password" class="form-control" id="pin" placeholder="PIN (4 číslice)" maxlength="4">
+            </div>
+            <button class="btn btn-primary w-100 mb-3" onclick="login()">Přihlásit se 🔐</button>
+            <button class="btn btn-success w-100" onclick="register()">Registrovat se 📝</button>
         </div>
-        <div>
-          <h1 class="text-2xl md:text-3xl">⚽ Fotbalové tipy</h1>
-          <p class="text-sm text-gray-300">Měsíční soutěž — začínáme v říjnu</p>
+    </div>
+
+    <!-- Main App Content -->
+    <div id="main-content" class="d-none flex-grow-1 d-flex flex-column">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#"><i class="fas fa-futbol me-2"></i>Fotbalové Tipy</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item"><a class="nav-link active" href="#" data-section="dashboard"><i class="fas fa-home me-1"></i>Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-section="matches"><i class="fas fa-soccer-ball me-1"></i>Zápasy</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-section="leaderboard"><i class="fas fa-trophy me-1"></i>Žebříček</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-section="profile"><i class="fas fa-user me-1"></i>Můj Profil</a></li>
+                        <li class="nav-item d-none" id="admin-nav-item"><a class="nav-link" href="#" data-section="admin"><i class="fas fa-shield-alt me-1"></i>Admin</a></li>
+                    </ul>
+                    <div class="d-flex align-items-center">
+                        <span class="navbar-text me-3 d-none d-lg-block" id="logged-in-user"></span>
+                        <button class="btn btn-warning me-2" onclick="toggleDarkMode()" aria-label="Přepnout režim"><i class="fas fa-moon" id="dark-mode-icon"></i></button>
+                        <button class="btn btn-danger" onclick="logout()"><i class="fas fa-sign-out-alt me-1"></i>Odhlásit se</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mt-4 flex-grow-1">
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="app-section">
+                <h2 class="mb-4"><i class="fas fa-chart-line me-2"></i>Přehled aktuální soutěže</h2>
+                <div class="row">
+                    <div class="col-md-6 mb-4"><div class="card p-4"><h3><i class="fas fa-calendar-alt me-2"></i>Aktuální měsíc</h3><p class="fs-4 mb-0" id="current-month-display"></p></div></div>
+                    <div class="col-md-6 mb-4"><div class="card p-4"><h3><i class="fas fa-coins me-2"></i>Celkový bank (Kč)</h3><p class="fs-4 mb-0" id="total-pool-display">0</p></div></div>
+                </div>
+                <div class="card p-4 mb-4">
+                    <h3><i class="fas fa-user-circle me-2"></i>Můj aktuální stav</h3>
+                    <div class="row pt-2">
+                        <div class="col-md-6 mb-3"><p class="mb-0">Body: <span class="fw-bold fs-5" id="my-dashboard-points">0</span></p></div>
+                        <div class="col-md-6 mb-3"><p class="mb-0">Celková sázka: <span class="fw-bold fs-5" id="my-dashboard-bet">0 Kč</span></p></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Matches Section -->
+            <section id="matches-section" class="app-section d-none">
+                <h2 class="mb-4"><i class="fas fa-soccer-ball me-2"></i>Zápasy a Tipy</h2>
+                <div id="matches-container"><p class="text-center text-muted">Načítám zápasy...</p></div>
+            </section>
+
+            <!-- Leaderboard Section -->
+            <section id="leaderboard-section" class="app-section d-none">
+                <h2 class="mb-4"><i class="fas fa-trophy me-2"></i>Žebříček Hráčů</h2>
+                <div class="card p-3"><div class="table-responsive"><table class="table table-hover" id="player-leaderboard-table"><thead><tr><th>#</th><th>Hráč</th><th>Body</th><th>Celková sázka (Kč)</th></tr></thead><tbody id="player-leaderboard-body"></tbody></table></div></div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profile-section" class="app-section d-none">
+                <h2 class="mb-4"><i class="fas fa-user me-2"></i>Můj Profil</h2>
+                <div class="card p-4 mb-4">
+                    <h3><i class="fas fa-address-card me-2"></i>Bankovní údaje</h3>
+                    <div class="mb-3"><label for="my-account" class="form-label">Číslo účtu (formát XXXXXX-XXXXXXXXXX):</label><input type="text" class="form-control" id="my-account" placeholder="123456-7890123456" maxlength="24"></div>
+                    <div class="mb-4"><label for="my-pin" class="form-label">Změna PIN (nový 4-místný PIN):</label><input type="password" class="form-control" id="my-pin" placeholder="••••" maxlength="4"></div>
+                    <button class="btn btn-info w-100" onclick="saveProfile()"><i class="fas fa-save me-1"></i>Uložit profil</button>
+                </div>
+                <div class="card p-4">
+                    <h3><i class="fas fa-qrcode me-2"></i>QR kód pro výhru</h3>
+                    <p class="text-muted">Generovat QR kód pro vyplacení výhry, pokud jsi vítěz měsíční soutěže.</p>
+                    <button class="btn btn-primary w-100" onclick="generateQR()"><i class="fas fa-qrcode me-1"></i>Generovat QR pro výhru</button>
+                    <div id="qr-container" class="qr-code-section d-none">
+                        <p class="fw-bold mb-2">QR kód pro tvou výhru:</p>
+                        <canvas id="qr-canvas"></canvas>
+                        <p class="mt-2 text-muted small" id="qr-details"></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Admin Section -->
+            <section id="admin-section" class="app-section d-none admin-controls">
+                <h2 class="mb-4 text-danger"><i class="fas fa-cogs me-2"></i>Administrace Soutěže</h2>
+                <div class="card p-4 mb-4">
+                    <h3><i class="fas fa-redo-alt me-2"></i>Měsíční Reset</h3>
+                    <p class="text-muted">Resetuje body, sázky a vyhodnocení pro novou měsíční soutěž.</p>
+                    <button class="btn btn-danger w-100" onclick="confirmReset()"><i class="fas fa-exclamation-triangle me-1"></i>Resetovat Měsíční Soutěž</button>
+                </div>
+                <div class="card p-4 mb-4">
+                    <h3><i class="fas fa-plus-circle me-2"></i>Správa zápasů</h3>
+                    <div class="mb-3"><label for="admin-new-round" class="form-label">Název kola (např. 1. KOLO):</label><input type="text" class="form-control" id="admin-new-round" placeholder="1. KOLO"></div>
+                    <div class="mb-3"><label for="admin-new-match" class="form-label">Název zápasu:</label><input type="text" class="form-control" id="admin-new-match" placeholder="Domácí Tým vs. Hostující Tým"></div>
+                    <button class="btn btn-success w-100" onclick="adminAddMatch()"><i class="fas fa-plus me-1"></i>Přidat zápas</button>
+                </div>
+                <div class="card p-4">
+                     <h3><i class="fas fa-check-double me-2"></i>Vyhodnocení zápasů</h3>
+                     <p class="text-muted">Zde se objeví zápasy k vyhodnocení.</p>
+                     <div id="admin-evaluation-container"></div>
+                </div>
+            </section>
         </div>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <div id="month-select-wrap" class="hidden md:block"></div>
-        <button id="theme-toggle" class="p-2 bg-white/6 rounded-lg glass text-sm" title="Přepnout režim">🌙</button>
-      </div>
-    </header>
-
-    <!-- Content layout -->
-    <main id="app" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- LEFT: Login / Profile -->
-      <section id="auth-section" class="lg:col-span-1 glass rounded-xl p-5 shadow-md">
-        <!-- Login/Register card -->
-        <div id="login-card" class="fade-in">
-          <h2 class="text-lg font-semibold mb-2">Přihlášení / Registrace</h2>
-          <p class="text-sm text-gray-300 mb-4">Zadej jméno a PIN (4 číslice). Jméno bude použito jako identifikátor.</p>
-
-          <label class="block text-xs text-gray-300">Jméno</label>
-          <input id="username" class="w-full mt-1 mb-3 px-3 py-2 rounded-lg bg-transparent border border-white/10 focus:border-indigo-400 outline-none" placeholder="např. petr" />
-
-          <label class="block text-xs text-gray-300">PIN</label>
-          <input id="pin" type="password" maxlength="4" class="w-full mt-1 mb-3 px-3 py-2 rounded-lg bg-transparent border border-white/10 focus:border-indigo-400 outline-none" placeholder="4 číslice" />
-
-          <div class="flex gap-2">
-            <button id="btn-register" class="flex-1 px-4 py-2 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400 shadow-md">Registrovat</button>
-            <button id="btn-login" class="flex-1 px-4 py-2 rounded-lg border border-white/10">Přihlásit</button>
-          </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container">
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header"><strong class="me-auto">Upozornění</strong><button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button></div>
+            <div class="toast-body"></div>
         </div>
+    </div>
 
-        <!-- Profile (visible when logged in) -->
-        <div id="profile-card" class="hidden mt-6 fade-in">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">Můj profil</h3>
-            <button id="btn-logout" class="text-sm text-gray-300">Odhlásit se</button>
-          </div>
-
-          <div class="mt-3">
-            <label class="block text-xs text-gray-300">Aktuální hráč</label>
-            <div id="current-player" class="py-2 px-3 mt-1 rounded-lg border border-white/8 bg-transparent text-sm"></div>
-          </div>
-
-          <div class="mt-3">
-            <label class="block text-xs text-gray-300">Číslo účtu (formát XXXXXX-XXXXXXXXXX)</label>
-            <input id="my-account" class="w-full mt-1 px-3 py-2 rounded-lg bg-transparent border border-white/10" placeholder="123456-7890123456" />
-          </div>
-
-          <div class="mt-3">
-            <label class="block text-xs text-gray-300">Změnit PIN</label>
-            <input id="my-pin" type="password" maxlength="4" class="w-full mt-1 px-3 py-2 rounded-lg bg-transparent border border-white/10" placeholder="nový PIN (4 číslice)" />
-          </div>
-
-          <div class="flex gap-2 mt-4">
-            <button id="btn-save-profile" class="flex-1 px-4 py-2 rounded-lg bg-emerald-400/20 border border-emerald-400 text-emerald-200">Uložit profil</button>
-            <button id="btn-generate-qr" class="flex-1 px-4 py-2 rounded-lg bg-indigo-500 text-white">Generovat QR výhry</button>
-          </div>
-
-          <div id="qr-container" class="mt-4 p-3 rounded-lg bg-white/3 hidden"></div>
-        </div>
-
-        <!-- Small helpers -->
-        <div class="mt-6 text-xs text-gray-400">
-          <p>Tipujte výsledky (0 = remíza, 1 = výhra domácích, 2 = výhra hostů). Sázky v Kč.</p>
-        </div>
-      </section>
-
-      <!-- MIDDLE: Matches & Tips -->
-      <section id="matches-section" class="lg:col-span-2 glass rounded-xl p-5 shadow-md">
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold">Zápasy a tipy</h2>
-          <div class="flex gap-2 items-center">
-            <select id="month-select" class="px-3 py-2 rounded-lg bg-transparent border border-white/10 text-sm"></select>
-            <button id="btn-refresh" class="px-3 py-2 rounded-lg border border-white/10">Načíst</button>
-            <button id="btn-reset-month" class="px-3 py-2 rounded-lg text-sm bg-red-600/20 border border-red-600">Reset měsíce</button>
-          </div>
-        </div>
-
-        <div id="matches-wrap" class="mt-4 space-y-4 overflow-auto max-h-[60vh] pr-2">
-          <!-- Matches will be injected here -->
-        </div>
-      </section>
-
-      <!-- RIGHT: Leaderboard / Stats -->
-      <aside id="leaderboard" class="lg:col-span-1 glass rounded-xl p-5 shadow-md">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold">Tabulka hráčů</h3>
-          <button id="btn-reset-all" class="text-xs text-red-300">Reset vše</button>
-        </div>
-
-        <div class="mt-3">
-          <table class="w-full text-sm">
-            <thead class="text-gray-300/80 text-left">
-              <tr><th>Hráč</th><th class="text-right">Body</th><th class="text-right">Sázky</th></tr>
-            </thead>
-            <tbody id="player-table" class="divide-y divide-white/6 mt-2"></tbody>
-          </table>
-        </div>
-
-        <div class="mt-6">
-          <h4 class="text-sm font-semibold text-gray-200">Pravidla bodování</h4>
-          <ul class="mt-2 text-xs text-gray-400 space-y-1">
-            <li>✅ Správný tip = +3 bodů</li>
-            <li>❌ Špatný tip = 0 bodů</li>
-            <li>Suma sázek se používá pro rozdělení výhry mezi vítěze měsíce</li>
-          </ul>
-        </div>
-      </aside>
-    </main>
-
-    <!-- Toast -->
-    <div id="toast" class="fixed right-6 bottom-6 bg-indigo-700/90 text-white px-4 py-2 rounded-lg shadow-lg hidden"></div>
-
-    <!-- Templates - hidden -->
-    <template id="match-card-template">
-      <div class="bg-white/2 p-4 rounded-lg glass">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <div class="text-sm font-medium text-gray-100 match-title"></div>
-            <div class="text-xs text-gray-300 mt-1 match-sub"></div>
-          </div>
-          <div class="text-xs text-gray-200 match-meta"></div>
-        </div>
-
-        <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
-          <div class="flex items-center gap-2">
-            <label class="text-xs text-gray-300">Tip</label>
-            <input type="number" min="0" max="2" class="tip-input w-20 px-2 py-1 rounded-md bg-transparent border border-white/8" />
-          </div>
-
-          <div class="flex items-center gap-2">
-            <label class="text-xs text-gray-300">Sázka (Kč)</label>
-            <input type="number" min="0" max="10000" step="10" class="bet-input w-28 px-2 py-1 rounded-md bg-transparent border border-white/8" />
-          </div>
-
-          <div class="flex items-center justify-end gap-2">
-            <div class="text-xs text-yellow-200 eval-indicator"></div>
-            <button class="btn-eval self-end px-3 py-1 rounded-md bg-emerald-500/20 border border-emerald-400 text-emerald-200 text-sm">Vyhodnotit</button>
-          </div>
-        </div>
-      </div>
-    </template>
-
-  </div>
-
-  <script>
-  (function(){
-    // -------------- CONFIG --------------
-    // Firebase config - keep your actual keys (these are from the original file)
-    const firebaseConfig = {
-      apiKey: "AIzaSyB-gLlgyPKNf4z1cfl1Z1N1qu79FvO_3A8",
-      authDomain: "ftbapp-ded2c.firebaseapp.com",
-      databaseURL: "https://ftbapp-ded2c-default-rtdb.europe-west1.firebasedatabase.app/",
-      projectId: "ftbapp-ded2c",
-      storageBucket: "ftbapp-ded2c.firebasestorage.app",
-      messagingSenderId: "239337886217",
-      appId: "1:239337886217:web:9b67dffaba23d6e86dded8"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // -------------- State --------------
-    let state = {
-      currentPlayer: sessionStorage.getItem('currentPlayer') || null,
-      month: sessionStorage.getItem('competitionMonth') || defaultStartMonth(),
-      users: {},
-      points: {},
-      tips: {},
-      bets: {},
-      totalBets: {},
-      matches: [], // array of { round, matches: [ "Team A - Team B" ] }
-    };
-
-    // -------------- Helpers --------------
-    function el(id){ return document.getElementById(id); }
-    function showToast(msg, ms=3000){
-      const t = el('toast');
-      t.textContent = msg;
-      t.classList.remove('hidden');
-      t.style.opacity = '1';
-      clearTimeout(t._to);
-      t._to = setTimeout(()=> t.classList.add('hidden'), ms);
-    }
-    function sanitizeName(name){ return String(name||'').trim().toLowerCase(); }
-
-    // Default start month -> říjen (October) of current year unless already passed Oct
-    function defaultStartMonth(){
-      const now = new Date();
-      const year = now.getMonth() < 9 ? now.getFullYear() : now.getFullYear(); // keep same year; user can change month
-      return `${year}-10`;
-    }
-
-    // Month select helper
-    function populateMonthSelect(selId){
-      const sel = el(selId);
-      sel.innerHTML = '';
-      const now = new Date();
-      // show 12 months around now (6 back, 6 forward) for convenience
-      for(let i=-6;i<=6;i++){
-        const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-        const val = d.toISOString().slice(0,7); // YYYY-MM
-        const label = d.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' });
-        const opt = document.createElement('option');
-        opt.value = val;
-        opt.textContent = label;
-        sel.appendChild(opt);
-      }
-      sel.value = state.month;
-    }
-
-    // Compose DB keys with month scope
-    function monthKey(path=''){ return (state.month ? `${state.month}/${path}` : path); }
-
-    // -------------- Matches loader --------------
-    // Keep previous behaviour: matches in 'matches.txt' with lines that include '. KOLO' as round header
-    // If you prefer, replace matches.txt fetch with static array.
-    async function loadMatches(){
-      try{
-        const res = await fetch('matches.txt');
-        if(!res.ok) throw new Error('matches.txt not found');
-        const txt = await res.text();
-        const lines = txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-        let rounds = [];
-        let current = null;
-        lines.forEach(line => {
-          if(line.includes('. KOLO') || line.toLowerCase().includes('kolo')){
-            if(current) rounds.push(current);
-            current = { round: line, matches: [] };
-          } else {
-            if(!current) current = { round: 'Nezařazené', matches: [] };
-            current.matches.push(line);
-          }
-        });
-        if(current) rounds.push(current);
-        state.matches = rounds;
-      } catch(err){
-        // fallback example data
-        state.matches = [
-          { round: "1. KOLO", matches: ["Sparta - Slavia", "Plzeň - Baník", "Slovácko - Bohemians"] },
-          { round: "2. KOLO", matches: ["Slavia - Plzeň", "Baník - Sparta"] }
-        ];
-      }
-    }
-
-    // -------------- Render --------------
-    function renderAuth(){
-      if(state.currentPlayer){
-        el('login-card').classList.add('hidden');
-        el('profile-card').classList.remove('hidden');
-        el('current-player').textContent = state.currentPlayer;
-        el('username').value = '';
-        el('pin').value = '';
-      } else {
-        el('login-card').classList.remove('hidden');
-        el('profile-card').classList.add('hidden');
-      }
-    }
-
-    function renderLeaderboard(){
-      const tbody = el('player-table');
-      tbody.innerHTML = '';
-      // sort by points desc
-      const players = Object.keys(state.users).sort((a,b) => (state.points[b]||0) - (state.points[a]||0));
-      players.forEach(u => {
-        const tr = document.createElement('tr');
-        tr.className = 'py-2';
-        tr.innerHTML = `
-          <td class="py-2"><div class="font-medium">${u}</div><div class="text-xs text-gray-400">${state.users[u].created ? new Date(state.users[u].created).toLocaleDateString() : ''}</div></td>
-          <td class="text-right font-semibold">${state.points[u]||0}</td>
-          <td class="text-right">${state.totalBets[u]||0} Kč</td>
-        `;
-        tbody.appendChild(tr);
-      });
-      if(players.length===0) {
-        tbody.innerHTML = '<tr><td class="text-sm text-gray-400" colspan="3">Žádní hráči</td></tr>';
-      }
-    }
-
-    // Render matches & tips — only allow editing of inputs for currentPlayer
-    function renderMatchesUI(){
-      const wrap = el('matches-wrap');
-      wrap.innerHTML = '';
-
-      if(!state.matches.length){
-        wrap.innerHTML = '<div class="text-center text-gray-400">Žádné zápasy</div>';
-        return;
-      }
-
-      state.matches.forEach((roundObj, rIdx) => {
-        const roundCard = document.createElement('div');
-        roundCard.className = 'space-y-3';
-        const roundHeader = document.createElement('div');
-        roundHeader.className = 'flex items-center justify-between';
-        roundHeader.innerHTML = `<div><h3 class="font-semibold">${roundObj.round}</h3><div class="text-xs text-gray-400">${roundObj.matches.length} zápasů</div></div>`;
-        roundCard.appendChild(roundHeader);
-
-        roundObj.matches.forEach((matchStr, mIdx) => {
-          const tpl = el('match-card-template').content.cloneNode(true);
-          const root = tpl.querySelector('.glass') || tpl.querySelector('div');
-          const title = tpl.querySelector('.match-title');
-          title.textContent = matchStr;
-          const sub = tpl.querySelector('.match-sub');
-          sub.textContent = `Zápas #${rIdx+1}-${mIdx+1}`;
-          const meta = tpl.querySelector('.match-meta');
-          meta.textContent = state.month;
-
-          const tipInput = tpl.querySelector('.tip-input');
-          const betInput = tpl.querySelector('.bet-input');
-          const evalIndicator = tpl.querySelector('.eval-indicator');
-          const btnEval = tpl.querySelector('.btn-eval');
-
-          // populate existing values if present
-          const tipVal = (state.tips?.[state.currentPlayer] && state.tips[state.currentPlayer][rIdx] && state.tips[state.currentPlayer][rIdx][mIdx]) ?? '';
-          const betVal = (state.bets?.[state.currentPlayer] && state.bets[state.currentPlayer][rIdx] && state.bets[state.currentPlayer][rIdx][mIdx]) ?? '';
-
-          tipInput.value = tipVal;
-          betInput.value = betVal;
-
-          // disable inputs if not current player
-          if(!state.currentPlayer) {
-            tipInput.disabled = true; betInput.disabled = true; btnEval.disabled = true;
-          }
-
-          // set evaluation indicator for current month & match for all users (simple: show if evaluated by owner)
-          // We'll show evaluation status for the current player only (they evaluate their own tips)
-          const evalKey = `${rIdx}-${mIdx}`;
-          // check if evaluation exists
-          const evaluation = (state.points && state.points._evals && state.points._evals[state.month] && state.points._evals[state.month][state.currentPlayer] && state.points._evals[state.month][state.currentPlayer][evalKey]) || null;
-          if(evaluation === 'ok'){
-            evalIndicator.textContent = 'OK ✅';
-          } else if(evaluation === 'spatne'){
-            evalIndicator.textContent = 'ŠPATNĚ ❌';
-          } else {
-            evalIndicator.textContent = 'Nevyhodnoceno';
-          }
-
-          // handlers
-          tipInput.addEventListener('change', (ev) => {
-            const v = ev.target.value;
-            const num = parseInt(v);
-            if(Number.isNaN(num) || num < 0 || num > 2) { showToast('Tip musí být 0, 1 nebo 2'); ev.target.value = ''; return; }
-            saveTip(state.currentPlayer, rIdx, mIdx, num);
-          });
-
-          betInput.addEventListener('change', (ev) => {
-            const v = ev.target.value;
-            const num = parseInt(v);
-            if(Number.isNaN(num) || num < 0 || num > 100000) { showToast('Neplatná sázka'); ev.target.value = ''; return; }
-            saveBet(state.currentPlayer, rIdx, mIdx, num);
-          });
-
-          btnEval.addEventListener('click', () => {
-            // quick prompt for evaluation
-            if(!state.currentPlayer) { showToast('Přihlas se pro vyhodnocení'); return; }
-            const choice = confirm('Označit svůj tip jako správný? (OK = správný, Zrušit = špatný)');
-            evaluateTip(state.currentPlayer, rIdx, mIdx, choice ? 'ok' : 'spatne');
-          });
-
-          wrap.appendChild(tpl);
-        });
-
-        wrap.appendChild(roundCard);
-      });
-    }
-
-    // -------------- Firebase sync --------------
-    function attachRealtime(){
-      // users
-      db.ref('users').on('value', snap => {
-        state.users = snap.val() || {};
-        renderLeaderboard();
-      });
-
-      // points keyed by month -> points/{YYYY-MM}/{username} = points
-      db.ref('points').on('value', snap => {
-        const val = snap.val() || {};
-        // extract current month points into state.points
-        state.points = {};
-        if(val[state.month]) {
-          Object.assign(state.points, val[state.month]);
-        } else {
-          // keep empty
-        }
-        // also store evals meta if exist under points/_evals? Keep simple: evaluations stored at evaluations/{month}/{username}/{r-m} = status
-        renderLeaderboard();
-        renderMatchesUI();
-      });
-
-      // bets per month
-      db.ref('bets').on('value', snap => {
-        const val = snap.val() || {};
-        state.bets = val[state.month] || {};
-        // compute total bets per user for current month
-        const totals = {};
-        Object.keys(state.bets || {}).forEach(user=>{
-          let sum = 0;
-          const rounds = state.bets[user] || {};
-          Object.values(rounds).forEach(roundObj=>{
-            Object.values(roundObj || {}).forEach(v=> sum += parseInt(v) || 0);
-          });
-          totals[user] = sum;
-        });
-        state.totalBets = totals;
-        // mirror to top-level for table read
-        renderLeaderboard();
-        renderMatchesUI();
-      });
-
-      // tips per month
-      db.ref('tips').on('value', snap => {
-        const val = snap.val() || {};
-        state.tips = val[state.month] || {};
-        renderMatchesUI();
-      });
-
-      // evaluations per month
-      db.ref('evaluations').on('value', snap => {
-        // structure evaluations/{month}/{username}/{r-m} = status
-        const val = snap.val() || {};
-        state.evaluations = val[state.month] || {};
-        renderMatchesUI();
-      });
-    }
-
-    // -------------- Actions --------------
-    function register(){
-      const raw = el('username').value;
-      const pin = el('pin').value.trim();
-      const username = sanitizeName(raw);
-      if(!username || username.length < 3){ showToast('Jméno min. 3 znaky'); return; }
-      if(!/^\d{4}$/.test(pin)){ showToast('PIN musí být 4 číslice'); return; }
-
-      db.ref(`users/${username}`).once('value').then(snap=>{
-        if(snap.exists()){
-          showToast('Uživatel již existuje');
-        } else {
-          const created = Date.now();
-          db.ref(`users/${username}`).set({ pin: pin, created }).then(()=>{
-            sessionStorage.setItem('currentPlayer', username);
-            state.currentPlayer = username;
-            renderAuth();
-            showToast('Registrace úspěšná');
-            // ensure basic nodes for month exist
-            db.ref(`points/${state.month}/${username}`).set(0);
-            db.ref(`totalBets/${state.month}/${username}`).set(0);
-          });
-        }
-      });
-    }
-
-    function login(){
-      const raw = el('username').value;
-      const pin = el('pin').value.trim();
-      const username = sanitizeName(raw);
-      if(!username || username.length < 3){ showToast('Jméno min. 3 znaky'); return; }
-      if(!/^\d{4}$/.test(pin)){ showToast('PIN musí být 4 číslice'); return; }
-
-      db.ref(`users/${username}/pin`).once('value').then(snap=>{
-        if(snap.exists() && snap.val() === pin){
-          sessionStorage.setItem('currentPlayer', username);
-          state.currentPlayer = username;
-          renderAuth();
-          showToast('Přihlášení úspěšné');
-        } else {
-          showToast('Špatný PIN nebo uživatel neexistuje');
-        }
-      });
-    }
-
-    function logout(){
-      sessionStorage.removeItem('currentPlayer');
-      state.currentPlayer = null;
-      renderAuth();
-      renderMatchesUI();
-      showToast('Odhlášeno');
-    }
-
-    function saveProfile(){
-      if(!state.currentPlayer){ showToast('Přihlas se'); return; }
-      const account = el('my-account').value.trim();
-      const pin = el('my-pin').value.trim();
-      if(account && !/^\d{6}-\d{10}$/.test(account)){ showToast('Číslo účtu formát XXXXXX-XXXXXXXXXX'); return; }
-      if(pin && !/^\d{4}$/.test(pin)){ showToast('PIN musí být 4 číslice'); return; }
-      const updates = {};
-      if(account) updates[`profiles/${state.currentPlayer}/account`] = account;
-      if(pin) updates[`users/${state.currentPlayer}/pin`] = pin;
-      db.ref().update(updates).then(()=> {
-        el('my-pin').value = '';
-        showToast('Profil uložen');
-      }).catch((e)=> showToast('Chyba: ' + e.message));
-    }
-
-    function saveTip(username, rIdx, mIdx, tipVal){
-      if(!username) { showToast('Chyba: žádný uživatel'); return; }
-      // save under tips/{YYYY-MM}/{username}/{rIdx}/{mIdx}
-      const p = `${state.month}/${username}/${rIdx}/${mIdx}`;
-      db.ref(`tips/${p}`).set(tipVal).then(()=>{
-        showToast('Tip uložen');
-      }).catch(e=>showToast('Chyba: ' + e.message));
-    }
-
-    function saveBet(username, rIdx, mIdx, betVal){
-      if(!username) { showToast('Chyba: žádný uživatel'); return; }
-      const p = `${state.month}/${username}/${rIdx}/${mIdx}`;
-      db.ref(`bets/${p}`).set(betVal).then(()=>{
-        // update totalBets for quick display
-        // recalc on server? Here we sum client-side and write to totalBets/{month}/{username}
-        db.ref(`bets/${state.month}/${username}`).once('value').then(snap=>{
-          const rounds = snap.val() || {};
-          let sum = 0;
-          Object.values(rounds).forEach(r => Object.values(r||{}).forEach(v => sum += parseInt(v)||0));
-          db.ref(`totalBets/${state.month}/${username}`).set(sum);
-        });
-        showToast('Sázka uložena');
-      }).catch(e=>showToast('Chyba: ' + e.message));
-    }
-
-    // User evaluates their own tip for a match. If ok, add +3 points for that user for this month.
-    function evaluateTip(username, rIdx, mIdx, status){
-      if(!username || username !== state.currentPlayer){ showToast('Můžeš vyhodnotit jen své tipy'); return; }
-      const evalKey = `${rIdx}-${mIdx}`;
-      // check existing
-      db.ref(`evaluations/${state.month}/${username}/${evalKey}`).once('value').then(snap=>{
-        if(snap.exists()){
-          showToast('Tento tip již byl vyhodnocen');
-          return;
-        }
-        db.ref(`evaluations/${state.month}/${username}/${evalKey}`).set(status).then(()=>{
-          if(status === 'ok'){
-            // increment points
-            db.ref(`points/${state.month}/${username}`).once('value').then(psnap=>{
-              const cur = psnap.exists() ? (parseInt(psnap.val())||0) : 0;
-              db.ref(`points/${state.month}/${username}`).set(cur + 3);
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script>
+        // Vaše Firebase konfigurace
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-gLlgyPKNf4z1cfl1Z1N1qu79FvO_3A8",
+            authDomain: "ftbapp-ded2c.firebaseapp.com",
+            databaseURL: "https://ftbapp-ded2c-default-rtdb.europe-west1.firebasedatabase.app/",
+            projectId: "ftbapp-ded2c",
+            storageBucket: "ftbapp-ded2c.firebasestorage.app",
+            messagingSenderId: "239337886217",
+            appId: "1:239337886217:web:9b67dffaba23d6e86dded8"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        let currentPlayer = null;
+        let allUsers = {};
+        
+        // --- AUTHENTICATION ---
+        function register() {
+            const username = document.getElementById('username').value.trim().toLowerCase();
+            const pin = document.getElementById('pin').value.trim();
+            if (username.length < 3) return showToast('Jméno musí mít alespoň 3 znaky!', 'danger');
+            if (!/^\d{4}$/.test(pin)) return showToast('PIN musí být 4 číslice!', 'danger');
+            
+            database.ref(`users/${username}`).once('value', snapshot => {
+                if (snapshot.exists()) {
+                    showToast('Uživatel s tímto jménem již existuje!', 'danger');
+                } else {
+                    database.ref(`users/${username}`).set({ pin: pin });
+                    sessionStorage.setItem('currentPlayer', username);
+                    showToast(`Registrace úspěšná, vítej ${username}! 🎉`, 'success');
+                    initApp();
+                }
             });
-          }
-          showToast('Tip vyhodnocen');
-        });
-      });
-    }
+        }
+        
+        function login() {
+            const username = document.getElementById('username').value.trim().toLowerCase();
+            const pin = document.getElementById('pin').value.trim();
+            if (username.length < 3 || pin.length !== 4) return showToast('Zadejte platné údaje.', 'danger');
 
-    // generate QR for payout: only current monthly winners can generate
-    async function generateQR(){
-      if(!state.currentPlayer){ showToast('Přihlas se'); return; }
-      // get all points for month
-      const ptsSnap = await db.ref(`points/${state.month}`).once('value');
-      const pts = ptsSnap.val() || {};
-      // find max
-      let max = -1;
-      Object.values(pts).forEach(v => { if(parseInt(v)>max) max = parseInt(v); });
-      if(max < 0){ showToast('Žádné body za tento měsíc'); return; }
-      // find winners
-      const winners = Object.keys(pts).filter(u => pts[u] == max);
-      if(!winners.includes(state.currentPlayer)){
-        showToast('Nejsi vítěz tohoto měsíce');
-        return;
-      }
-      // get total pool
-      const betsSnap = await db.ref(`totalBets/${state.month}`).once('value');
-      const tb = betsSnap.val() || {};
-      let pool = 0;
-      Object.values(tb).forEach(v => pool += parseFloat(v)||0);
-      if(pool <= 0){ showToast('Pool je 0 Kč'); return; }
-      const payout = pool / winners.length;
+            database.ref(`users/${username}/pin`).once('value', snapshot => {
+                if (snapshot.val() === pin) {
+                    sessionStorage.setItem('currentPlayer', username);
+                    showToast(`Vítej zpět, ${username}! 🎉`, 'success');
+                    initApp();
+                } else {
+                    showToast('Špatné jméno nebo PIN!', 'danger');
+                }
+            });
+        }
 
-      // get account
-      const accSnap = await db.ref(`profiles/${state.currentPlayer}/account`).once('value');
-      const account = accSnap.exists() ? accSnap.val() : null;
-      if(!account){
-        showToast('Nenastaven účet v profilu');
-        return;
-      }
+        function logout() {
+            sessionStorage.removeItem('currentPlayer');
+            document.getElementById('main-content').classList.add('d-none');
+            document.getElementById('login-page').classList.remove('d-none');
+            document.getElementById('username').value = '';
+            document.getElementById('pin').value = '';
+            showToast('Odhlášení úspěšné. 👋', 'info');
+        }
 
-      // Build payment payload (simple text) - you can adapt to your bank's QR SPD format
-      const msg = `Vyhra za ${state.month} ${payout.toFixed(2)} CZK; příjemce:${state.currentPlayer};acc:${account}`;
-      const container = el('qr-container');
-      container.innerHTML = `<div class="text-sm text-gray-100 mb-2">Výplata celkem ${payout.toFixed(2)} Kč</div>`;
-      // create canvas
-      const canvas = document.createElement('canvas');
-      container.appendChild(canvas);
-      container.classList.remove('hidden');
-      QRCode.toCanvas(canvas, msg, { width: 220 }, function (error) {
-        if (error) { showToast('Chyba generování QR'); console.error(error); return; }
-        showToast('QR připraveno');
-      });
-    }
+        // --- APP INITIALIZATION ---
+        function initApp() {
+            currentPlayer = sessionStorage.getItem('currentPlayer');
+            if (!currentPlayer) return;
 
-    // Reset month data: points, bets, tips, evaluations for selected month
-    function resetMonth(){
-      if(!confirm(`Opravdu vymazat data pro měsíc ${state.month}? Tato akce je nevratná.`)) return;
-      const updates = {};
-      updates[`points/${state.month}`] = {};
-      updates[`bets/${state.month}`] = {};
-      updates[`tips/${state.month}`] = {};
-      updates[`evaluations/${state.month}`] = {};
-      updates[`totalBets/${state.month}`] = {};
-      db.ref().update(updates).then(()=> showToast('Měsíc resetován'));
-    }
+            document.getElementById('login-page').classList.add('d-none');
+            document.getElementById('main-content').classList.remove('d-none');
+            document.getElementById('logged-in-user').textContent = `Přihlášen: ${currentPlayer}`;
+            
+            // Admin check
+            if (currentPlayer === 'kuba') {
+                document.getElementById('admin-nav-item').classList.remove('d-none');
+                document.getElementById('admin-section').classList.remove('d-none'); // show section if admin
+            } else {
+                 document.getElementById('admin-nav-item').classList.add('d-none');
+                 document.getElementById('admin-section').classList.add('d-none');
+            }
 
-    // Reset everything
-    function resetAll(){
-      if(!confirm('Opravdu vymazat VŠECHNA data (uživatelé, body, sázky)?')) return;
-      db.ref().remove().then(()=> showToast('Vše smazáno (pozor)')).catch(e=>showToast('Chyba: '+e.message));
-    }
+            setupNavigation();
+            setupFirebaseListeners();
+            showSection('dashboard');
+            
+            const monthNames = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
+            document.getElementById('current-month-display').textContent = `${monthNames[new Date().getMonth()]} ${new Date().getFullYear()}`;
+        }
+        
+        // --- UI & NAVIGATION ---
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    e.target.classList.add('active');
+                    showSection(e.target.dataset.section);
+                });
+            });
+        }
 
-    // -------------- Init and listeners --------------
-    async function start(){
-      // DOM hooks
-      el('btn-register').addEventListener('click', register);
-      el('btn-login').addEventListener('click', login);
-      el('btn-logout').addEventListener('click', logout);
-      el('btn-save-profile').addEventListener('click', saveProfile);
-      el('btn-generate-qr').addEventListener('click', generateQR);
-      el('btn-refresh').addEventListener('click', async ()=>{ await loadMatches(); renderMatchesUI(); showToast('Načteno'); });
-      el('btn-reset-month').addEventListener('click', resetMonth);
-      el('btn-reset-all').addEventListener('click', resetAll);
+        function showSection(sectionId) {
+            document.querySelectorAll('.app-section').forEach(section => {
+                section.classList.add('d-none');
+            });
+             if(sectionId === 'admin' && currentPlayer !== 'kuba') { // Security check
+                showToast('Přístup odepřen.', 'danger');
+                sectionId = 'dashboard';
+                document.querySelector('.nav-link[data-section="dashboard"]').classList.add('active');
+            }
+            document.getElementById(`${sectionId}-section`).classList.remove('d-none');
+        }
 
-      // month selects
-      populateMonthSelect('month-select');
-      populateMonthSelect('month-select-wrap'); // hidden wrapper for header
-      el('month-select').addEventListener('change', (e)=>{
-        state.month = e.target.value;
-        sessionStorage.setItem('competitionMonth', state.month);
-        // re-render and rebind firebase use - we rely on global listeners reading month-scoped nodes so just re-render
-        renderMatchesUI();
-        renderLeaderboard();
-        showToast('Měsíc změněn: ' + state.month);
-      });
+        function toggleDarkMode() {
+            document.body.classList.toggle('light-mode');
+            const icon = document.getElementById('dark-mode-icon');
+            if (document.body.classList.contains('light-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
 
-      // theme toggle
-      el('theme-toggle').addEventListener('click', ()=>{
-        document.body.classList.toggle('light');
-        el('theme-toggle').textContent = document.body.classList.contains('light') ? '☀️' : '🌙';
-      });
+        function showToast(message, type = 'info') {
+            const toastEl = document.getElementById('liveToast');
+            const toastBody = toastEl.querySelector('.toast-body');
+            
+            toastEl.classList.remove('bg-success', 'bg-danger', 'bg-info');
+            if (type === 'success') toastEl.classList.add('bg-success');
+            else if (type === 'danger') toastEl.classList.add('bg-danger');
+            else toastEl.classList.add('bg-info');
 
-      // bind initial view
-      renderAuth();
+            toastBody.textContent = message;
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
 
-      // load matches then attach firebase events
-      await loadMatches();
-      attachRealtime();
+        // --- FIREBASE LISTENERS & DATA RENDERING ---
+        function setupFirebaseListeners() {
+            database.ref('users').on('value', snapshot => {
+                allUsers = snapshot.val() || {};
+                renderLeaderboard();
+            });
 
-      // initial UI render
-      renderMatchesUI();
-      // load profile if logged
-      if(state.currentPlayer) {
-        el('my-account').value = '';
-        db.ref(`profiles/${state.currentPlayer}/account`).once('value').then(snap=>{ if(snap.exists()) el('my-account').value = snap.val(); });
-      }
+            database.ref('matches').on('value', snapshot => {
+                const matches = snapshot.val() || {};
+                renderMatchesAndAdminEvaluation(matches);
+            });
+            
+            database.ref('totalBets').on('value', snapshot => {
+                const totalBets = snapshot.val() || {};
+                let totalPool = 0;
+                Object.values(totalBets).forEach(bet => totalPool += bet || 0);
+                document.getElementById('total-pool-display').textContent = `${totalPool.toLocaleString('cs-CZ')} Kč`;
+            });
+            
+            database.ref(`profiles/${currentPlayer}`).on('value', snapshot => {
+                const profile = snapshot.val() || {};
+                document.getElementById('my-account').value = profile.account || '';
+            });
+        }
+        
+        function renderLeaderboard() {
+            const pointsRef = database.ref('points');
+            const betsRef = database.ref('totalBets');
 
-      // get users list once to populate state
-      db.ref('users').once('value').then(snap => {
-        state.users = snap.val() || {};
-        renderLeaderboard();
-      });
+            Promise.all([pointsRef.once('value'), betsRef.once('value')]).then(snapshots => {
+                const points = snapshots[0].val() || {};
+                const totalBets = snapshots[1].val() || {};
+                const playerList = Object.keys(allUsers).map(username => ({
+                    username,
+                    points: points[username] || 0,
+                    totalBet: totalBets[username] || 0
+                }));
+                
+                playerList.sort((a, b) => b.points - a.points);
+                
+                const tableBody = document.getElementById('player-leaderboard-body');
+                tableBody.innerHTML = '';
+                playerList.forEach((player, index) => {
+                    const row = `<tr>
+                        <td>${index + 1}</td>
+                        <td>${player.username}</td>
+                        <td>${player.points}</td>
+                        <td>${player.totalBet.toLocaleString('cs-CZ')}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                    if(player.username === currentPlayer) {
+                        document.getElementById('my-dashboard-points').textContent = player.points;
+                        document.getElementById('my-dashboard-bet').textContent = `${player.totalBet.toLocaleString('cs-CZ')} Kč`;
+                    }
+                });
+            });
+        }
 
-      // small: when page loads, if logged in, show profile; else show login
-      if(sessionStorage.getItem('currentPlayer')) {
-        state.currentPlayer = sessionStorage.getItem('currentPlayer');
-        renderAuth();
-      }
-    }
+        function renderMatchesAndAdminEvaluation(rounds) {
+            const container = document.getElementById('matches-container');
+            const adminContainer = document.getElementById('admin-evaluation-container');
+            container.innerHTML = '';
+            adminContainer.innerHTML = '';
 
-    // Run
-    start();
+            if (Object.keys(rounds).length === 0) {
+                container.innerHTML = '<p class="text-center text-muted">Zatím nebyly přidány žádné zápasy.</p>';
+                return;
+            }
+            
+            // Collect all data once for efficiency
+            Promise.all([
+                database.ref('tips').once('value'),
+                database.ref('bets').once('value'),
+                database.ref('evaluations').once('value'),
+                database.ref('matchResults').once('value')
+            ]).then(snapshots => {
+                const allTips = snapshots[0].val() || {};
+                const allBets = snapshots[1].val() || {};
+                const allEvals = snapshots[2].val() || {};
+                const matchResults = snapshots[3].val() || {};
 
-  })();
-  </script>
+                for (const roundName in rounds) {
+                    const roundDiv = document.createElement('div');
+                    roundDiv.innerHTML = `<h3 class="my-4">${roundName}</h3>`;
+                    
+                    for (const matchId in rounds[roundName]) {
+                        const matchName = rounds[roundName][matchId];
+                        const matchCard = document.createElement('div');
+                        matchCard.className = 'match-card';
+                        
+                        let playerRowsHTML = '';
+                        Object.keys(allUsers).forEach(username => {
+                            const tip = allTips[username]?.[matchId] ?? '';
+                            const bet = allBets[username]?.[matchId] ?? '';
+                            const evaluation = allEvals[username]?.[matchId] ?? 'nevyhodnoceno';
+                            const isCurrentUser = username === currentPlayer;
+                            const isEvaluated = matchResults[matchId] !== undefined;
+                            
+                            playerRowsHTML += `
+                                <div class="player-tip-row">
+                                    <span><i class="fas fa-user me-2"></i>${username}</span>
+                                    <input type="number" class="tip-input" placeholder="Tip" min="0" max="2" value="${tip}" onchange="saveTip('${matchId}', this.value)" ${!isCurrentUser || isEvaluated ? 'disabled' : ''}>
+                                    <input type="number" class="bet-input" placeholder="Sázka" min="0" max="1000" step="10" value="${bet}" onchange="saveBet('${matchId}', this.value)" ${!isCurrentUser || isEvaluated ? 'disabled' : ''}>
+                                    <span class="evaluation-status-display status-${evaluation}">${evaluation.toUpperCase()}</span>
+                                </div>`;
+                        });
+                        
+                        const officialResultText = matchResults[matchId] !== undefined ? `Výsledek: ${matchResults[matchId]}` : 'Čeká na vyhodnocení';
+                        
+                        matchCard.innerHTML = `
+                            <div class="match-header">
+                                <h5><i class="fas fa-futbol me-2"></i>${matchName}</h5>
+                                <span class="match-score">${officialResultText}</span>
+                            </div>
+                            <div>${playerRowsHTML}</div>
+                        `;
+                        roundDiv.appendChild(matchCard);
+                        
+                        // Render for admin evaluation
+                        if(matchResults[matchId] === undefined) {
+                             adminContainer.innerHTML += `
+                                <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                                    <span>${matchName}</span>
+                                    <div class="admin-evaluation-buttons">
+                                        <button class="btn btn-sm btn-success" onclick="adminEvaluateMatch('${matchId}', 1)">1</button>
+                                        <button class="btn btn-sm btn-warning" onclick="adminEvaluateMatch('${matchId}', 0)">0</button>
+                                        <button class="btn btn-sm btn-danger" onclick="adminEvaluateMatch('${matchId}', 2)">2</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                    container.appendChild(roundDiv);
+                }
+                if (adminContainer.innerHTML === '') {
+                    adminContainer.innerHTML = '<p class="text-muted">Všechny zápasy jsou vyhodnoceny.</p>';
+                }
+            });
+        }
+        
+        // --- USER ACTIONS ---
+        function saveTip(matchId, tip) {
+            const value = parseInt(tip);
+            if (isNaN(value) || value < 0 || value > 2) {
+                showToast('Tip musí být 0, 1 nebo 2!', 'danger');
+                return;
+            }
+            database.ref(`tips/${currentPlayer}/${matchId}`).set(value)
+                .then(() => showToast('Tip uložen!', 'success'))
+                .catch(err => showToast(`Chyba: ${err.message}`, 'danger'));
+        }
+
+        function saveBet(matchId, bet) {
+            const value = parseInt(bet);
+            if (isNaN(value) || value < 0 || value > 1000) {
+                showToast('Sázka musí být mezi 0 a 1000 Kč!', 'danger');
+                return;
+            }
+            database.ref(`bets/${currentPlayer}/${matchId}`).set(value)
+                .then(() => {
+                    showToast('Sázka uložena!', 'success');
+                    updateTotalBet(currentPlayer);
+                })
+                .catch(err => showToast(`Chyba: ${err.message}`, 'danger'));
+        }
+
+        function updateTotalBet(username) {
+            database.ref(`bets/${username}`).once('value', snapshot => {
+                const userBets = snapshot.val() || {};
+                const totalBet = Object.values(userBets).reduce((sum, bet) => sum + (parseInt(bet) || 0), 0);
+                database.ref(`totalBets/${username}`).set(totalBet);
+            });
+        }
+
+        function saveProfile() {
+            const account = document.getElementById('my-account').value.trim();
+            const pin = document.getElementById('my-pin').value.trim();
+            
+            if (account && !/^\d{1,6}-\d{1,10}$/.test(account)) return showToast('Číslo účtu má neplatný formát!', 'danger');
+            if (pin && !/^\d{4}$/.test(pin)) return showToast('PIN musí být 4 číslice!', 'danger');
+            
+            const updates = {};
+            if (account) updates[`/profiles/${currentPlayer}/account`] = account;
+            if (pin) updates[`/users/${currentPlayer}/pin`] = pin;
+            
+            database.ref().update(updates)
+                .then(() => {
+                    showToast('Profil uložen!', 'success');
+                    if (pin) document.getElementById('my-pin').value = '';
+                })
+                .catch(err => showToast(`Chyba: ${err.message}`, 'danger'));
+        }
+
+        function generateQR() {
+            Promise.all([
+                database.ref('points').once('value'),
+                database.ref('totalBets').once('value')
+            ]).then(snapshots => {
+                const points = snapshots[0].val() || {};
+                const totalBets = snapshots[1].val() || {};
+                
+                if (Object.keys(points).length === 0) return showToast('Soutěž ještě nezačala.', 'info');
+
+                let maxPoints = -1;
+                let winners = [];
+                Object.entries(points).forEach(([user, score]) => {
+                    if (score > maxPoints) {
+                        maxPoints = score;
+                        winners = [user];
+                    } else if (score === maxPoints) {
+                        winners.push(user);
+                    }
+                });
+                
+                if (!winners.includes(currentPlayer)) return showToast('Nejsi vítěz, QR nelze generovat!', 'danger');
+
+                const totalPool = Object.values(totalBets).reduce((sum, bet) => sum + bet, 0);
+                const winnings = totalPool / winners.length;
+
+                database.ref(`profiles/${currentPlayer}/account`).once('value', accountSnap => {
+                    const account = accountSnap.val();
+                    if (!account) return showToast('Nejprve zadejte číslo účtu v profilu!', 'danger');
+
+                    const qrContainer = document.getElementById('qr-container');
+                    const canvas = document.getElementById('qr-canvas');
+                    const paymentDetails = `SPD*1.0*ACC:${account.replace('-', '')}*AM:${winnings.toFixed(2)}*CC:CZK*MSG:Vyhra FTB Tipy`;
+                    
+                    QRCode.toCanvas(canvas, paymentDetails, { width: 256 }, error => {
+                        if (error) return showToast('Chyba při generování QR kódu!', 'danger');
+                        document.getElementById('qr-details').textContent = `Platba ${winnings.toFixed(2)} Kč na účet ${account}`;
+                        qrContainer.classList.remove('d-none');
+                        showToast('QR kód úspěšně vygenerován!', 'success');
+                    });
+                });
+            });
+        }
+        
+        // --- ADMIN ACTIONS ---
+        function confirmReset() {
+            if (confirm('Opravdu chcete resetovat celou měsíční soutěž? Tato akce je nevratná!')) {
+                const pathsToRemove = ['points', 'totalBets', 'bets', 'tips', 'evaluations', 'matchResults'];
+                const updates = {};
+                pathsToRemove.forEach(path => updates[path] = null);
+                database.ref().update(updates)
+                    .then(() => showToast('Soutěž byla úspěšně resetována!', 'success'))
+                    .catch(err => showToast(`Chyba při resetu: ${err.message}`, 'danger'));
+            }
+        }
+        
+        function adminAddMatch() {
+            const round = document.getElementById('admin-new-round').value.trim();
+            const match = document.getElementById('admin-new-match').value.trim();
+            if (!round || !match) return showToast('Vyplňte název kola i zápasu!', 'danger');
+            
+            const matchId = database.ref().child(`matches/${round}`).push().key;
+            database.ref(`matches/${round}/${matchId}`).set(match)
+                .then(() => {
+                    showToast('Zápas úspěšně přidán!', 'success');
+                    document.getElementById('admin-new-match').value = '';
+                })
+                .catch(err => showToast(`Chyba: ${err.message}`, 'danger'));
+        }
+        
+        function adminEvaluateMatch(matchId, result) {
+            database.ref('matchResults').child(matchId).set(result).then(() => {
+                database.ref('tips').once('value', tipsSnapshot => {
+                    const allTips = tipsSnapshot.val() || {};
+                    const updates = {};
+                    
+                    Object.keys(allUsers).forEach(username => {
+                        const userTip = allTips[username]?.[matchId];
+                        if (userTip !== undefined) {
+                            if (parseInt(userTip) === result) {
+                                // Correct tip
+                                updates[`evaluations/${username}/${matchId}`] = 'ok';
+                                const currentPoints = database.ref(`points/${username}`);
+                                currentPoints.transaction(points => (points || 0) + 3);
+                            } else {
+                                // Incorrect tip
+                                updates[`evaluations/${username}/${matchId}`] = 'spatne';
+                            }
+                        }
+                    });
+                    database.ref().update(updates);
+                    showToast(`Zápas vyhodnocen s výsledkem ${result}`, 'success');
+                });
+            });
+        }
+        
+        // --- ON PAGE LOAD ---
+        window.onload = () => {
+            if (sessionStorage.getItem('currentPlayer')) {
+                initApp();
+            }
+        };
+
+    </script>
 </body>
 </html>
