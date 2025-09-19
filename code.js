@@ -619,7 +619,7 @@ function calculatePlayerForm(username, evaluations, allMatches) {
 
 
 function openPerplexityAnalysis(matchName) {
-    const prompt = `Poskytni stručnou analýzu pro fotbalový zápas: ${matchName}`;
+    const prompt = `Poskytni mi stručnou analýzu pro fotbalový zápas. Potřebuji to jasně, hezky strukturováno s emojis. Informace o klubech, zajimavosti, aktualni trener, sestava, historie, rivalita. Buď stručný, ale text pěkne vytvoř a strukturuj a předej infromace, tak aby byly pochopitelné. ZÁPAS: ${matchName}`;
     const encodedPrompt = encodeURIComponent(prompt);
     const url = `https://www.perplexity.ai/?q=${encodedPrompt}`;
     window.open(url, '_blank');
