@@ -9,8 +9,8 @@ const firebaseConfig = {
     appId: "1:239337886217:web:9b67dffaba23d6e86dded8"
 };
 const ADMIN_USERNAME = 'kuba';
-const COMPETITION_START = '2024-09-20';
-const COMPETITION_END = '2024-10-20';
+const COMPETITION_START = '2024-09-19';
+const COMPETITION_END = '2024-10-19';
 
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
