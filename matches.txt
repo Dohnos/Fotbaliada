@@ -1,35 +1,25 @@
-7. KOLO
-AFC Bournemouth vs. Fulham  
-Arsenal vs. West Ham United  
-Aston Villa vs. Burnley  
-Brentford vs. Manchester City  
-Chelsea vs. Liverpool  
-Everton vs. Crystal Palace  
-Leeds United vs. Tottenham Hotspur  
-Manchester United vs. Sunderland  
-Newcastle United vs. Nottingham Forest  
-Wolverhampton Wanderers vs. Brighton & Hove Albion  
+5. KOLO (začíná 20.09. v 13:30)
 
-8. KOLO
-Brighton & Hove Albion vs. Newcastle United  
-Burnley vs. Leeds United  
-Crystal Palace vs. AFC Bournemouth  
-Fulham vs. Arsenal  
-Liverpool vs. Manchester United  
-Manchester City vs. Everton  
-Nottingham Forest vs. Chelsea  
-Sunderland vs. Wolverhampton Wanderers  
-Tottenham Hotspur vs. Aston Villa  
-West Ham United vs. Brentford  
+Liverpool vs. Everton
+Brighton & Hove Albion vs. Tottenham Hotspur
+Burnley vs. Nottingham Forest
+West Ham United vs. Crystal Palace
+Wolverhampton Wanderers vs. Leeds United
+Manchester United vs. Chelsea
+Fulham vs. Brentford
+Bournemouth vs. Newcastle United
+Sunderland vs. Aston Villa
+Arsenal vs. Manchester City
 
-9. KOLO
-AFC Bournemouth vs. Nottingham Forest  
-Arsenal vs. Crystal Palace  
-Aston Villa vs. Manchester City  
-Brentford vs. Liverpool  
-Chelsea vs. Sunderland  
-Everton vs. Tottenham Hotspur  
-Leeds United vs. West Ham United  
-Manchester United vs. Brighton & Hove Albion  
-Newcastle United vs. Fulham  
-Wolverhampton Wanderers vs. Burnley  
+6. KOLO (začíná 27.09. v 13:30)
+
+Brentford vs. Manchester United
+Crystal Palace vs. Liverpool
+Chelsea vs. Brighton & Hove Albion
+Leeds United vs. Bournemouth
+Manchester City vs. Burnley
+Nottingham Forest vs. Sunderland
+Tottenham Hotspur vs. Wolverhampton Wanderers
+Aston Villa vs. Fulham
+Newcastle United vs. Arsenal
+Everton vs. West Ham United
