@@ -8,7 +8,7 @@ const firebaseConfig = {
     messagingSenderId: "239337886217",
     appId: "1:239337886217:web:9b67dffaba23d6e86dded8"
 };
-const ADMIN_USERNAME = 'kuba';
+const ADMIN_USERNAME = 'dohnos';
 
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
