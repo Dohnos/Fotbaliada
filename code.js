@@ -14,6 +14,8 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 let currentPlayer = null, allUsers = {}, allMatches = [], resetModal;
 let appData = {};
+let openMatchAccordions = new Set();
+let isInitialMatchesLoad = true;
 
 // --- AUTH & INIT ---
 async function register() {
@@ -102,6 +104,16 @@ async function initApp() {
 
 function setupFirebaseListeners() {
     database.ref().on('value', snapshot => {
+        const matchesSection = document.getElementById('matches-section');
+        // Before re-rendering, if the matches section is visible, save the state of open accordions.
+        if (matchesSection && !matchesSection.classList.contains('d-none')) {
+            const openElements = document.querySelectorAll('#roundsAccordion .accordion-collapse.show');
+            openMatchAccordions.clear(); // Clear previous state
+            openElements.forEach(el => openMatchAccordions.add(el.id));
+            // After the first render triggered by showing the section, subsequent renders are updates.
+            isInitialMatchesLoad = false;
+        }
+
         appData = snapshot.val() || {};
         allUsers = appData.users || {};
         renderAllSections();
@@ -155,6 +167,11 @@ function renderAllSections() {
     if (!activeSection) return;
     const sectionId = activeSection.id.replace('-section', '');
     
+    const contentContainer = document.getElementById('content-container');
+    // On mobile, the scrollable element is the body/html, not content-container
+    const scrollableElement = window.innerWidth <= 992 ? document.documentElement : contentContainer;
+    const scrollPosition = scrollableElement.scrollTop;
+    
     const renderMap = {
         'dashboard': renderDashboard, 'matches': renderMatches,
         'leaderboard': renderLeaderboard, 'profile': renderProfile,
@@ -164,6 +181,13 @@ function renderAllSections() {
     if (renderMap[sectionId]) {
         renderMap[sectionId](appData);
         if (sectionId === 'admin' && currentPlayer !== ADMIN_USERNAME) showSection('dashboard');
+    }
+
+    // Restore scroll position after DOM update, specifically for sections with long content.
+    if (sectionId === 'matches' || sectionId === 'leaderboard') {
+         setTimeout(() => {
+            scrollableElement.scrollTop = scrollPosition;
+        }, 0);
     }
 }
 
@@ -298,7 +322,11 @@ function renderMatches(data) {
     html += '<div class="accordion" id="roundsAccordion">';
 
     allMatches.forEach((round, roundIndex) => {
-        html += `<div class="accordion-item mb-3"><h2 class="accordion-header"><button class="accordion-button ${roundIndex === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${roundIndex}">${round.round}</button></h2><div id="collapse${roundIndex}" class="accordion-collapse collapse ${roundIndex === 0 ? 'show' : ''}" data-bs-parent="#roundsAccordion"><div class="accordion-body">`;
+        const collapseId = `collapse${roundIndex}`;
+        // On initial load, open the first. On updates, use the preserved state.
+        const isShown = isInitialMatchesLoad ? roundIndex === 0 : openMatchAccordions.has(collapseId);
+
+        html += `<div class="accordion-item mb-3"><h2 class="accordion-header"><button class="accordion-button ${isShown ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">${round.round}</button></h2><div id="${collapseId}" class="accordion-collapse collapse ${isShown ? 'show' : ''}" data-bs-parent="#roundsAccordion"><div class="accordion-body">`;
         round.matches.forEach(match => {
             const officialResult = matchResults[match.id], isEvaluated = officialResult !== undefined;
             const myTip = allTips[currentPlayer]?.[match.id], myBet = allBets[currentPlayer]?.[match.id] ?? '';
@@ -504,6 +532,10 @@ function showSection(sectionId) {
     document.querySelectorAll('.app-section').forEach(s => s.classList.add('d-none'));
     const sectionEl = document.getElementById(`${sectionId}-section`);
     if(sectionEl) {
+        // Set flag for initial load of matches page to ensure first accordion opens.
+        if (sectionId === 'matches') {
+            isInitialMatchesLoad = true;
+        }
         sectionEl.classList.remove('d-none');
         renderAllSections();
     }
